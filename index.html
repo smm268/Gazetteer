@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gazetteer</title>
+    <!-- External Stylesheets-->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/css/leaflet.extra-markers.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css"
+    />
+    <!--Local Stylesheet-->
+    <link rel="stylesheet" href="styles\style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.css" />
+
+  </head>
+  <body>
+    <span id="selectContainer">
+      <select id="countrySelect" class="form-select shadow-sm">
+        <!-- populate from an AJAX CALL to a PHP routine that returns a JSON object that is an array of just ISO codes and names from countryBorders.geo.json -->
+        <option value="">Select a country</option>
+      </select>
+    </span>
+
+    <div id="map"></div>
+
+    <!-- example modal layout -->
+
+    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Overview</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-street-view fa-xl text-success"></i>
+                </td>
+
+                <td>Language</td>
+                <td id="language">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-heart fa-xl text-success"></i>
+                </td>
+
+                <td>Country Name</td>
+                <td id="countryName">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-car fa-xl text-success"></i>
+                </td>
+
+                <td>Capital</td>
+                <td id="capital">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-book fa-xl text-success"></i>
+                </td>
+
+                <td>Population</td>
+                <td id="population">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-bath fa-xl text-success"></i>
+                </td>
+
+                <td>Currency</td>
+                <td id="currency">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-bell fa-xl text-success"></i>
+                </td>
+
+                <td>Exchange Rate</td>
+                <td id="exchangeRate">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-anchor fa-xl text-success"></i>
+                </td>
+
+                <td>Weather</td>
+                <td id="weather">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-money-bill fa-xl text-success"></i>
+                </td>
+
+                <td>Wikipedia Info</td>
+                <td id="wikipedia">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-wifi fa-xl text-success"></i>
+                </td>
+
+                <td>Airports</td>
+                <td id="airports">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-globe fa-xl text-success"></i>
+                </td>
+
+                <td>Local News</td>
+                <td id="news">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-bicycle fa-xl text-success"></i>
+                </td>
+
+                <td>Air Pollution</td>
+                <td id="airPollution">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-landmark fa-xl text-success"></i>
+                </td>
+
+                <td>Timezone Info</td>
+                <td id="timezone">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-tree fa-xl text-success"></i>
+                </td>
+
+                <td>Landmarks</td>
+                <td id="landmarks">Loading...</td>
+                <td class="text-end">value</td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--External Scripts-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/js/leaflet.extra-markers.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.81.1/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+    <!--Local Script-->
+    <script src="scripts\script.js"></script>
+  </body>
+</html>
