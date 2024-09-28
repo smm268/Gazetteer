@@ -106,42 +106,79 @@ function loadCountryBorders(iso_a2) {
     })
     .catch((error) => console.error("Error retrieving country border:", error));
 }
-  
+ // Get user's current location
+ if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
 
-// Automatically detect location and make AJAX call to fetch country and borders
-function detectLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition, showError);
-  } else {
-    alert("Geolocation is not supported by this browser.");
-  }
+      // Add a popup for the current location
+      L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup("You are here!")
+        .openPopup();
+
+      // Reverse geocode using OpenCage to get country ISO code
+      reverseGeocode(lat, lng);
+    },
+    function (error) {
+      console.error("Error getting geolocation: ", error);
+    }
+  );
+} else {
+  console.error("Geolocation is not supported by this browser.");
 }
 
-// Success callback for geolocation
-function showPosition(position) {
-  const latitude = position.coords.latitude;
-  const longitude = position.coords.longitude;
 
-  // Send latitude and longitude to the PHP file via AJAX
-  fetch(`data/getCountryByLocation.php?lat=${latitude}&lng=${longitude}`)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.error) {
-        console.error(data.error);
-        return;
-      }
+// Reverse geocode with OpenCage to get country ISO code
+function reverseGeocode(lat, lng) {
+const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${'eb581a03425e482c86521447b05443b2'}`;
 
-      // Set the country in the dropdown
+fetch(url)
+  .then((response) => response.json())
+  .then((data) => {
+    if (data && data.results && data.results.length > 0) {
+      const countryISO = data.results[0].components.country_code.toUpperCase();
+      const countryName = data.results[0].components.country;
+
+      console.log(`Detected Country: ${countryName} (${countryISO})`);
+
+      // Select the country in the dropdown
       const selectElement = document.getElementById("countrySelect");
-      selectElement.value = data.iso_code.toUpperCase(); // Set selected country in dropdown
+      selectElement.value = countryISO;
 
-      // Load country borders for the detected country
-      loadCountryBorders(data.iso_code);
-    })
-    .catch((error) => console.error("Error fetching the country data:", error));
+      // Load country borders and display on map
+      loadCountryBorders(countryISO);
+    } else {
+      console.error("Unable to reverse geocode location.");
+    }
+  })
+  .catch((error) => console.error("Error during reverse geocoding: ", error));
 }
 
-// Error callback for geolocation
-function showError(error) {
-  console.error(`Geolocation error: ${error.message}`);
+// Fetch and display country borders
+function loadCountryBorders(iso_a2) {
+console.log(`Fetching borders for country code: ${iso_a2}`); // Debugging
+
+fetch(`data/getCountryBorder.php?iso_a2=${iso_a2}`)
+  .then((response) => response.json())
+  .then((data) => {
+    if (data.error) {
+      console.error(data.error);
+      return;
+    }
+
+    // Remove previous layer if needed
+    if (countryLayer) {
+      map.removeLayer(countryLayer);
+    }
+
+    // Add new layer border
+    countryLayer = L.geoJSON(data.geometry).addTo(map);
+
+    // Adjust map view with borders
+    map.fitBounds(countryLayer.getBounds());
+  })
+  .catch((error) => console.error("Error retrieving country border:", error));
 }
