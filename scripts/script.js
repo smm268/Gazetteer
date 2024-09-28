@@ -131,16 +131,21 @@ function loadCountryBorders(iso_a2) {
 }
 
 
-// Reverse geocode with OpenCage to get country ISO code
+/// Reverse geocode with OpenCage to get country ISO code via PHP backend
 function reverseGeocode(lat, lng) {
-const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${'eb581a03425e482c86521447b05443b2'}`;
+  // Fetch data from the PHP backend (opencage.php)
+  const url = `data/opencage.php?lat=${lat}&lng=${lng}`;
 
-fetch(url)
-  .then((response) => response.json())
-  .then((data) => {
-    if (data && data.results && data.results.length > 0) {
-      const countryISO = data.results[0].components.country_code.toUpperCase();
-      const countryName = data.results[0].components.country;
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        console.error("Error:", data.error);
+        return;
+      }
+
+      const countryISO = data.countryISO; // Get country ISO from response
+      const countryName = data.countryName;
 
       console.log(`Detected Country: ${countryName} (${countryISO})`);
 
@@ -150,35 +155,6 @@ fetch(url)
 
       // Load country borders and display on map
       loadCountryBorders(countryISO);
-    } else {
-      console.error("Unable to reverse geocode location.");
-    }
-  })
-  .catch((error) => console.error("Error during reverse geocoding: ", error));
-}
-
-// Fetch and display country borders
-function loadCountryBorders(iso_a2) {
-console.log(`Fetching borders for country code: ${iso_a2}`); // Debugging
-
-fetch(`data/getCountryBorder.php?iso_a2=${iso_a2}`)
-  .then((response) => response.json())
-  .then((data) => {
-    if (data.error) {
-      console.error(data.error);
-      return;
-    }
-
-    // Remove previous layer if needed
-    if (countryLayer) {
-      map.removeLayer(countryLayer);
-    }
-
-    // Add new layer border
-    countryLayer = L.geoJSON(data.geometry).addTo(map);
-
-    // Adjust map view with borders
-    map.fitBounds(countryLayer.getBounds());
-  })
-  .catch((error) => console.error("Error retrieving country border:", error));
+    })
+    .catch((error) => console.error("Error during reverse geocoding:", error));
 }
