@@ -155,3 +155,30 @@ function reverseGeocode(lat, lng) {
     })
     .catch((error) => console.error("Error during reverse geocoding:", error));
 }
+// Function to fetch country info and populate the modal
+function fetchCountryInfo(countryName) {
+  fetch(`data/countryInfo.php?country_name=${encodeURIComponent(countryName)}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        console.error('Error fetching country data:', data.error);
+        return;
+      }
+
+      // Populate modal fields with received data
+      document.getElementById('countryName').innerText = data.countryName || 'N/A';
+      document.getElementById('capital').innerText = data.capital || 'N/A';
+      document.getElementById('population').innerText = data.population || 'N/A';
+      document.getElementById('language').innerText = data.language || 'N/A';
+
+      // Show the modal after data is populated
+      $('#exampleModal').modal('show');
+    })
+    .catch(error => console.error('Error fetching country info:', error));
+}
+
+// Event listener for the dropdown menu selection
+document.getElementById('countrySelect').addEventListener('change', function() {
+  const selectedCountry = this.options[this.selectedIndex].text;  // Get selected country name
+  fetchCountryInfo(selectedCountry);  // Fetch and populate modal
+});
