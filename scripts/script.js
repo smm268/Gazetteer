@@ -5,8 +5,7 @@
 let map;
 let countryLayer; // Holds country borders layer
 
-// tile layers
-
+// Tile layers
 const streets = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
   {
@@ -28,8 +27,7 @@ const basemaps = {
   Satellite: satellite,
 };
 
-// buttons
-
+// Buttons
 const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
 });
@@ -39,7 +37,7 @@ $(document).ready(function () {
   // Initialise Map and add controls
   map = L.map("map", {
     layers: [streets],
-  }).setView([54.5, -4], 6); // setView is not required in your application as you will be deploying map.fitBounds() on the country border polygon
+  }).setView([54.5, -4], 6); // Adjust map center and zoom if needed
 
   // Layers switching control
   L.control.layers(basemaps).addTo(map);
@@ -49,13 +47,9 @@ $(document).ready(function () {
 
   // Fetch country data and populate dropdown
   fetch("data/extract_iso_names.php")
-    .then((response) => {
-      console.log("Fetching country data...");
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((data) => {
       console.log("Country data received:", data);
-      // Populate the dropdown menu
       const selectElement = document.getElementById("countrySelect");
       data.forEach((country) => {
         const option = document.createElement("option");
@@ -63,97 +57,100 @@ $(document).ready(function () {
         option.textContent = country.name;
         selectElement.appendChild(option);
       });
-      // Log to confirm dropdown is populated
       console.log("Dropdown populated with country data");
     })
-    .catch((error) => console.error("Error fetching the country data:", error));
+    .catch((error) => console.error("Error fetching country data:", error));
 
-  // Event listener for country selection from menu
+  // Event listener for country selection from dropdown menu
   document
     .getElementById("countrySelect")
     .addEventListener("change", function () {
-      const iso_a2 = this.value.toUpperCase(); // Ensure uppercase
-      console.log(`Country selected: ${iso_a2}`); // Debugging
-      loadCountryBorders(iso_a2);
+      const selectedCountryName = this.options[this.selectedIndex].text; // Get the selected country name
+      console.log(`Selected Country: ${selectedCountryName}`); // Debugging
+
+      // Call the PHP backend to fetch geocoding data based on the selected country name
+      fetch(`data/opencage.php?country_name=${encodeURIComponent(selectedCountryName)}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            console.error(data.error);
+            return;
+          }
+
+          const { lat, lng, countryISO } = data;
+          document.getElementById("countrySelect").value = countryISO;
+
+          loadCountryBorders(countryISO);
+
+          if (lat && lng) {
+            map.setView([lat, lng], 6);
+          }
+        })
+        .catch((error) => console.error("Error during forward geocoding:", error));
     });
+
+  // Get user's current location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Add a popup for the current location
+        L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup("You are here!")
+          .openPopup();
+
+        // Reverse geocode to get the country ISO code
+        reverseGeocode(lat, lng);
+      },
+      function (error) {
+        console.error("Error getting geolocation: ", error);
+      }
+    );
+  } else {
+    console.error("Geolocation is not supported by this browser.");
+  }
 });
-// End of (document).ready block -------
 
 // Fetch and display country borders
 function loadCountryBorders(iso_a2) {
   console.log(`Fetching borders for country code: ${iso_a2}`); // Debugging
 
   fetch(`data/getCountryBorder.php?iso_a2=${iso_a2}`)
-    .then((response) => {
-      console.log("Response received"); // Debugging
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((data) => {
-      console.log("Data received:", data); // Debugging
-
       if (data.error) {
         console.error(data.error);
         return;
       }
-      // Remove previous layer if needed
       if (countryLayer) {
         map.removeLayer(countryLayer);
       }
-      // Add new layer border
       countryLayer = L.geoJSON(data.geometry).addTo(map);
-      // Adjust map view with borders
       map.fitBounds(countryLayer.getBounds());
     })
     .catch((error) => console.error("Error retrieving country border:", error));
 }
- // Get user's current location
- if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    function (position) {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
 
-      // Add a popup for the current location
-      L.marker([lat, lng])
-        .addTo(map)
-        .bindPopup("You are here!")
-        .openPopup();
-
-      // Reverse geocode using OpenCage to get country ISO code
-      reverseGeocode(lat, lng);
-    },
-    function (error) {
-      console.error("Error getting geolocation: ", error);
-    }
-  );
-} else {
-  console.error("Geolocation is not supported by this browser.");
-}
-
-
-/// Reverse geocode with OpenCage to get country ISO code via PHP backend
+// Reverse geocode using OpenCage API to get country based on lat/lng
 function reverseGeocode(lat, lng) {
-  // Fetch data from the PHP backend (opencage.php)
-  const url = `data/opencage.php?lat=${lat}&lng=${lng}`;
-
-  fetch(url)
+  fetch(`data/opencage.php?lat=${lat}&lng=${lng}`)
     .then((response) => response.json())
     .then((data) => {
       if (data.error) {
-        console.error("Error:", data.error);
+        console.error(data.error);
         return;
       }
 
-      const countryISO = data.countryISO; // Get country ISO from response
-      const countryName = data.countryName;
+      const { countryISO, countryName } = data;
+      console.log(`Reverse geocoded country: ${countryName} (${countryISO})`);
 
-      console.log(`Detected Country: ${countryName} (${countryISO})`);
+      // Set the dropdown to the correct country ISO code
+      document.getElementById("countrySelect").value = countryISO;
 
-      // Select the country in the dropdown
-      const selectElement = document.getElementById("countrySelect");
-      selectElement.value = countryISO;
-
-      // Load country borders and display on map
+      // Load borders and center map on the country
       loadCountryBorders(countryISO);
     })
     .catch((error) => console.error("Error during reverse geocoding:", error));

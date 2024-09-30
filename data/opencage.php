@@ -1,45 +1,50 @@
 <?php
-// Set the header to JSON response
 header('Content-Type: application/json');
 
-// Check if latitude and longitude are passed via GET request
-if (!isset($_GET['lat']) || !isset($_GET['lng'])) {
-    echo json_encode(['error' => 'Missing latitude or longitude']);
+$apiKey = 'eb581a03425e482c86521447b05443b2';
+
+if (isset($_GET['lat']) && isset($_GET['lng'])) {
+    $lat = $_GET['lat'];
+    $lng = $_GET['lng'];
+    $apiUrl = "https://api.opencagedata.com/geocode/v1/json?q=$lat+$lng&key=$apiKey";
+} elseif (isset($_GET['country_name'])) {
+    $countryName = urlencode($_GET['country_name']);
+    $apiUrl = "https://api.opencagedata.com/geocode/v1/json?q=$countryName&key=$apiKey";
+} else {
+    echo json_encode(['error' => 'Missing parameters']);
     exit;
 }
 
-$lat = $_GET['lat'];
-$lng = $_GET['lng'];
-
-// OpenCage API key - Replace with your actual API key
-$apiKey = 'eb581a03425e482c86521447b05443b2';
-
-// Build the OpenCage API URL
-$apiUrl = "https://api.opencagedata.com/geocode/v1/json?q=$lat+$lng&key=$apiKey";
-
-// Call the OpenCage API
 $response = file_get_contents($apiUrl);
-
-// Check if the API call was successful
 if ($response === FALSE) {
     echo json_encode(['error' => 'Failed to fetch data from OpenCage API']);
     exit;
 }
 
-// Decode the API response
 $data = json_decode($response, true);
-
-// Check if the response contains results
 if (isset($data['results']) && count($data['results']) > 0) {
-    $countryISO = strtoupper($data['results'][0]['components']['country_code']);  // ISO country code
-    $countryName = $data['results'][0]['components']['country'];                  // Country name
+    $result = $data['results'][0];
 
-    // Return country code and name as JSON
-    echo json_encode([
-        'countryISO' => $countryISO,
-        'countryName' => $countryName
-    ]);
+    if (isset($_GET['lat']) && isset($_GET['lng'])) {
+        $countryISO = strtoupper($result['components']['country_code']);
+        $countryName = $result['components']['country'];
+        echo json_encode([
+            'countryISO' => $countryISO,
+            'countryName' => $countryName
+        ]);
+    } elseif (isset($_GET['country_name'])) {
+        $lat = $result['geometry']['lat'];
+        $lng = $result['geometry']['lng'];
+        $countryISO = strtoupper($result['components']['country_code']);
+        $countryName = $result['components']['country'];
+        echo json_encode([
+            'lat' => $lat,
+            'lng' => $lng,
+            'countryISO' => $countryISO,
+            'countryName' => $countryName
+        ]);
+    }
 } else {
-    echo json_encode(['error' => 'No results found']);
+    echo json_encode(['error' => 'No results from OpenCage API']);
 }
 ?>
