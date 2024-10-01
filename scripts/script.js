@@ -171,8 +171,16 @@ function fetchCountryInfo(countryName) {
       document.getElementById('population').innerText = data.population || 'N/A';
       document.getElementById('language').innerText = data.language || 'N/A';
 
-      // Show the modal after data is populated
-      $('#exampleModal').modal('show');
+  
+      // Fetch and display the currency rate
+      fetchCurrencyRate(data.currencyCode);
+
+      // Fetch and display the weather info
+      fetchWeatherInfo(data.capital);
+
+      // Fetch and display Wikipedia info
+      fetchWikipediaInfo(data.countryName);
+
     })
     .catch(error => console.error('Error fetching country info:', error));
 }
@@ -182,3 +190,65 @@ document.getElementById('countrySelect').addEventListener('change', function() {
   const selectedCountry = this.options[this.selectedIndex].text;  // Get selected country name
   fetchCountryInfo(selectedCountry);  // Fetch and populate modal
 });
+
+
+// Function to fetch the currency exchange rate
+function fetchCurrencyRate(currencyCode) {
+  fetch(`data/getCurrency.php?currencyCode=${currencyCode}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('currency').textContent = 'Currency not found';
+        document.getElementById('exchangeRate').textContent = 'N/A';
+      } else {
+        // Populate the currency and exchange rate in the modal
+        document.getElementById('currency').textContent = currencyCode;
+        document.getElementById('exchangeRate').textContent = data.rate.toFixed(2); // Format to 2 decimal places
+      }
+    })
+    .catch(error => {
+      console.error("Failed to fetch currency data", error);
+    });
+}
+
+// Function to fetch weather data using the capital city
+function fetchWeatherInfo(capitalCity) {
+  fetch(`data/weather.php?capital=${encodeURIComponent(capitalCity)}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('weather').textContent = 'Weather data not available';
+        console.error('Error fetching weather data:', data.error);
+      } else {
+        // Display weather information in the modal
+        const weatherDescription = `${data.temperature}°C, ${data.description}`;
+        document.getElementById('weather').textContent = weatherDescription;
+      }
+    })
+    .catch(error => {
+      console.error("Failed to fetch weather data", error);
+    });
+}
+
+// Function to fetch Wikipedia data using the country name
+function fetchWikipediaInfo(countryName) {
+  fetch(`data/getWikipediaInfo.php?country_name=${encodeURIComponent(countryName)}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('wikipediaInfo').textContent = 'Wikipedia information not available';
+        console.error('Error fetching Wikipedia data:', data.error);
+      } else {
+        // Display Wikipedia information in the modal
+        const wikiContent = `
+          <strong>${data.title}</strong><br>
+          ${data.extract} <br>
+          <a href="${data.url}" target="_blank">Read more on Wikipedia</a>
+        `;
+        document.getElementById('wikipediaInfo').innerHTML = wikiContent;
+      }
+    })
+    .catch(error => {
+      console.error("Failed to fetch Wikipedia data", error);
+    });
+}

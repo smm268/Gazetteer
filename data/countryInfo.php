@@ -1,12 +1,10 @@
 <?php
 header('Content-Type: application/json');
 
-// Get the country name from the query parameters
+// Check if country_name parameter is set
 if (isset($_GET['country_name'])) {
     $countryName = urlencode($_GET['country_name']);
-
-   
-    $username = 'smm488';
+    $username = 'smm488'; // Your GeoNames username
 
     // Fetch country code using GeoNames API based on country name
     $urlCountryInfo = "http://api.geonames.org/searchJSON?q={$countryName}&maxRows=1&username={$username}";
@@ -14,7 +12,7 @@ if (isset($_GET['country_name'])) {
     $countryInfoData = json_decode($countryInfoResponse, true);
 
     if (isset($countryInfoData['geonames'][0]['countryCode'])) {
-        // Extract country code from the response
+        // Extract country code (ISO Alpha-2) from the response
         $countryCode = $countryInfoData['geonames'][0]['countryCode'];
 
         // Fetch detailed country info using the country code
@@ -25,12 +23,16 @@ if (isset($_GET['country_name'])) {
         if (isset($detailedData['geonames'][0])) {
             $countryDetails = $detailedData['geonames'][0];
 
+            // Now fetch the currency code from the detailed country info
+            $currencyCode = $countryDetails['currencyCode'];
+
             // Return the relevant details as a JSON response
             echo json_encode([
                 'countryName' => $countryDetails['countryName'],
                 'capital' => $countryDetails['capital'],
                 'population' => number_format($countryDetails['population']),
                 'language' => $countryDetails['languages'],
+                'currencyCode' => $currencyCode  // Add currencyCode to the response
             ]);
         } else {
             // Error in fetching detailed country info
