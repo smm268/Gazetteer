@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 if (isset($_GET['country_name'])) {
     $countryName = urlencode($_GET['country_name']);
 
-    // Replace with your own GeoNames username
+   
     $username = 'smm488';
 
     // Fetch country code using GeoNames API based on country name
