@@ -1,26 +1,10 @@
-
-
 <?php
-// Check if currencyCode is set
-if (!isset($_GET['currencyCode'])) {
-    echo json_encode(['error' => 'Currency code is missing']);
-    exit;
-}
+$apiKey = '2207b37df7564933861356998530f49c';
+$countryISO = $_GET['countryISO'];
 
-$currencyCode = $_GET['currencyCode'];
+$url = "https://openexchangerates.org/api/latest.json?app_id=$apiKey";
 
-// Fetch currency data from OpenExchangeRates API
-
-$apiUrl = "https://openexchangerates.org/api/latest.json?app_id=2207b37df7564933861356998530f49c";
-
-$response = file_get_contents($apiUrl);
-$data = json_decode($response, true);
-
-// Check if the currency code exists in the data
-if (isset($data['rates'][$currencyCode])) {
-    $rate = $data['rates'][$currencyCode];
-    echo json_encode(['rate' => $rate]);
-} else {
-    echo json_encode(['error' => 'Currency not found']);
-}
+// Make the API call and return the response
+$response = file_get_contents($url);
+echo $response;
 ?>

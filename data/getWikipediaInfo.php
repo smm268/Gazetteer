@@ -1,29 +1,49 @@
 <?php
+// Set the header to return JSON
 header('Content-Type: application/json');
 
-// Check if country_name is provided
-if (!isset($_GET['country_name'])) {
-    echo json_encode(['error' => 'Country name is missing']);
+// Get the country name from the query parameters
+$country_name = isset($_GET['country_name']) ? $_GET['country_name'] : null;
+
+if (!$country_name) {
+    echo json_encode(['error' => 'Country name is required']);
     exit;
 }
 
-$countryName = urlencode($_GET['country_name']);
+// URL encode the country name to ensure it's safe for the API request
+$country_name_encoded = urlencode($country_name);
 
-// Wikipedia API URL
-$wikiApiUrl = "https://en.wikipedia.org/api/rest_v1/page/summary/{$countryName}";
+// Wikipedia API endpoint for searching
+$api_url = "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={$country_name_encoded}&format=json&utf8=1&origin=*";
 
-// Fetch Wikipedia page summary
-$response = file_get_contents($wikiApiUrl);
+// Fetch data from the Wikipedia API
+$response = file_get_contents($api_url);
 $data = json_decode($response, true);
 
-// Check if the page exists
-if (isset($data['extract'])) {
+// Check for errors in the API response
+if (isset($data['error'])) {
+    echo json_encode(['error' => $data['error']['info']]);
+    exit;
+}
+
+// Check if there are search results
+if (isset($data['query']['search']) && count($data['query']['search']) > 0) {
+    // Get the first search result
+    $result = $data['query']['search'][0];
+
+    // Prepare the response with the title, extract, and URL
+    $title = $result['title'];
+    $extract = $result['snippet']; // This snippet can contain HTML tags, you might want to strip them out
+    $url = "https://en.wikipedia.org/wiki/" . urlencode($title);
+
+    // Return the result
     echo json_encode([
-        'title' => $data['title'],
-        'extract' => $data['extract'],
-        'url' => $data['content_urls']['desktop']['page']
+        'title' => $title,
+        'extract' => strip_tags($extract), // Optionally strip HTML tags for better presentation
+        'url' => $url,
     ]);
 } else {
-    echo json_encode(['error' => 'Wikipedia info not found']);
+    // No results found
+    echo json_encode(['error' => 'No Wikipedia information found']);
 }
 ?>
