@@ -1,27 +1,24 @@
 <?php
 header('Content-Type: application/json');
 
-// Check if iso_code parameter is set
-if (isset($_GET['iso_code'])) {
-    $isoCode = urlencode($_GET['iso_code']);
-    $username = 'smm488'; // Your GeoNames username
+// Check if country_name parameter is set
+if (isset($_GET['country_name'])) {
+    $countryName = $_GET['country_name'];
+    $username = 'smm488';
 
-    // Fetch detailed country info using GeoNames API with country code
-    $urlDetailedInfo = "http://api.geonames.org/countryInfoJSON?formatted=true&country={$isoCode}&username={$username}";
-    $detailedResponse = file_get_contents($urlDetailedInfo);
+    // GeoNames API URL
+    $apiUrl = "http://api.geonames.org/countryInfoJSON?formatted=true&country=" . urlencode($countryName) . "&username=" . urlencode($username);
 
-    // Check if the API call was successful
-    if ($detailedResponse === FALSE) {
+    // Fetch data from the GeoNames API
+    $response = file_get_contents($apiUrl);
+    if ($response === FALSE) {
         echo json_encode(['error' => 'Failed to connect to GeoNames API']);
         exit;
     }
 
-    $detailedData = json_decode($detailedResponse, true);
-
-    if (isset($detailedData['geonames'][0])) {
-        $countryDetails = $detailedData['geonames'][0];
-
-        // Return the relevant details as a JSON response
+    $data = json_decode($response, true);
+    if (isset($data['geonames']) && count($data['geonames']) > 0) {
+        $countryDetails = $data['geonames'][0];
         echo json_encode([
             'countryName' => $countryDetails['countryName'],
             'capital' => $countryDetails['capital'],
@@ -30,10 +27,9 @@ if (isset($_GET['iso_code'])) {
             'currencyCode' => $countryDetails['currencyCode']
         ]);
     } else {
-        // Error in fetching detailed country info
         echo json_encode(['error' => 'Country details not found']);
     }
 } else {
-    echo json_encode(['error' => 'Country ISO code is missing']);
+    echo json_encode(['error' => 'Country name is missing']);
 }
 ?>
