@@ -133,8 +133,43 @@
     </div>
 
 
- 
-<!-- Modal to show country weather forecast -->
+ <!-- Currency Exchange Modal -->
+<div id="currencyModal" class="modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">Currency Exchange Calculator</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="currencyForm">
+          <div class="mb-3">
+            <label for="baseCurrency" class="form-label">Base Currency</label>
+            <input type="text" id="baseCurrency" class="form-control" value="USD" required>
+          </div>
+          <div class="mb-3">
+            <label for="targetCurrency" class="form-label">Target Currency</label>
+            <input type="text" id="targetCurrency" class="form-control" value="EUR" required>
+          </div>
+          <div class="mb-3">
+            <label for="amount" class="form-label">Amount</label>
+            <input type="number" id="amount" class="form-control" value="1" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label for="result" class="form-label">Converted Amount</label>
+            <input type="text" id="result" class="form-control" readonly>
+          </div>
+          <button type="submit" class="btn btn-outline-info">Convert</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-info btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 
     

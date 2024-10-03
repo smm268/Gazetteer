@@ -24,12 +24,64 @@ const satellite = L.tileLayer(
       "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
   }
 );
-
-
 const basemaps = {
   Streets: streets,
   Satellite: satellite,
 };
+
+// Initialize the map
+$(document).ready(function () {
+  // Create map
+  map = L.map("map", {
+    layers: [streets],
+  }).setView([54.5, -4], 6); // Initial view
+
+  // Create marker groups for different categories
+  const airportMarkers = L.layerGroup().addTo(map);
+  const universityMarkers = L.layerGroup().addTo(map);
+  const cityMarkers = L.layerGroup().addTo(map);
+  const stadiumMarkers = L.layerGroup().addTo(map);
+
+  // Sample data for each category (replace with real data)
+  const airports = [
+    { lat: 40.7128, lng: -74.0060, name: "John F. Kennedy International Airport" },
+    { lat: 51.4700, lng: -0.4543, name: "London Heathrow Airport" }
+  ];
+
+  const universities = [
+    { lat: 42.3601, lng: -71.0942, name: "Harvard University" },
+    { lat: 51.7548, lng: -1.2544, name: "University of Oxford" }
+  ];
+
+  const cities = [
+    { lat: 48.8566, lng: 2.3522, name: "Paris" },
+    { lat: 34.0522, lng: -118.2437, name: "Los Angeles" }
+  ];
+
+  const stadiums = [
+    { lat: 40.8296, lng: -73.9262, name: "Yankee Stadium" },
+    { lat: 51.5550, lng: -0.1086, name: "Emirates Stadium" }
+  ];
+
+
+
+ // Add markers for each category
+ addMarkers(airportMarkers, airports, 'plane', 'blue');
+ addMarkers(universityMarkers, universities, 'university', 'green');
+ addMarkers(cityMarkers, cities, 'city', 'orange');
+ addMarkers(stadiumMarkers, stadiums, 'soccer-ball-o', 'red');
+
+  // Overlay maps for layer control
+  const overlayMaps = {
+    "Airports": airportMarkers,
+    "Universities": universityMarkers,
+    "Cities": cityMarkers,
+    "Stadiums": stadiumMarkers,
+  };
+
+
+// Add layer control
+L.control.layers(basemaps, overlayMaps).addTo(map);
 
 // buttons
 
@@ -37,19 +89,13 @@ const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
 });
 
-// (document).ready block begins--------
-$(document).ready(function () {
-  // Initialise Map and add controls
-  map = L.map("map", {
-    layers: [streets],
-  }).setView([54.5, -4], 6); // setView is not required in your application as you will be deploying map.fitBounds() on the country border polygon
 
-  // Layers switching control
-  L.control.layers(basemaps).addTo(map);
+
 
   // Info button
   infoBtn.addTo(map);
-
+});
+  
   // Fetch country data and populate dropdown
   fetch("data/extract_iso_names.php")
     .then((response) => {
@@ -113,9 +159,23 @@ if (navigator.geolocation) {
 
 
     });
-});
+
 // End of (document).ready block -------
 
+
+// Function to add markers to respective layers
+function addMarkers(layerGroup, data, iconName, color) {
+  data.forEach(item => {
+    L.marker([item.lat, item.lng], {
+      icon: L.ExtraMarkers.icon({
+        icon: iconName,
+        markerColor: color,
+        shape: 'circle',
+        prefix: 'fa'
+      })
+    }).addTo(layerGroup).bindPopup(item.name);
+  });
+}
 
 
 // Fetch and display country borders
@@ -233,4 +293,3 @@ function fetchCountryDetails(isoCode) {
     })
     .catch((error) => console.error("Error fetching country details:", error));
 }
-
