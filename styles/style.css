@@ -23,6 +23,4 @@ body {
   width: 200px;
   margin: 0 auto;
 }
-.forecast-day img {
-  width: 50px; /* Set a consistent size for the weather icons */
-}
+

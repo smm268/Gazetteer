@@ -84,17 +84,42 @@ $(document).ready(function () {
 L.control.layers(basemaps, overlayMaps).addTo(map);
 
 // buttons
+ // Create a button for fetching weather
+ const weatherBtn = L.easyButton("fa-cloud fa-lg", function (btn, map) {
+  const selectedCountry = document.getElementById("countrySelect").value;
+
+  if (selectedCountry) {
+      // Fetch coordinates based on selected country
+      fetch(`data/opencage.php?country_name=${encodeURIComponent(selectedCountry)}`)
+          .then((response) => response.json())
+          .then((data) => {
+              if (data.error) {
+                  console.error(data.error);
+                  return;
+              }
+
+              const { lat, lng } = data;
+
+              // Fetch weather data
+              fetchWeather(lat, lng);
+          })
+          .catch((error) => console.error("Error fetching coordinates:", error));
+  } else {
+      alert("Please select a country first!");
+  }
+});
+
+weatherBtn.addTo(map);
 
 const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
 });
 
-
-
-
   // Info button
   infoBtn.addTo(map);
 });
+
+
   
   // Fetch country data and populate dropdown
   fetch("data/extract_iso_names.php")
@@ -153,12 +178,11 @@ if (navigator.geolocation) {
 
       // Fetch and display country details in modal using PHP
       fetchCountryDetails(iso_a2);
-    
-      
+
+});
  
 
 
-    });
 
 // End of (document).ready block -------
 
@@ -293,3 +317,79 @@ function fetchCountryDetails(isoCode) {
     })
     .catch((error) => console.error("Error fetching country details:", error));
 }
+ // Fetch country data and populate dropdown
+ fetch("data/extract_iso_names.php")
+ .then((response) => response.json())
+ .then((data) => {
+     const selectElement = document.getElementById("countrySelect");
+     data.forEach((country) => {
+         const option = document.createElement("option");
+         option.value = country.iso_code.toUpperCase(); // Ensure uppercase
+         option.textContent = country.name;
+         selectElement.appendChild(option);
+     });
+ })
+ .catch((error) => console.error("Error fetching the country data:", error));
+
+
+// Function to fetch and display weather
+function fetchWeather(lat, lon) {
+// Call the PHP backend to fetch weather data
+fetch(`data/getWeather.php?lat=${lat}&lon=${lon}`)
+ .then((response) => {
+     if (!response.ok) {
+         throw new Error('Network response was not ok: ' + response.statusText);
+     }
+     return response.json();
+ })
+ .then((data) => {
+     if (data.error) {
+         console.error(data.error);
+         return;
+     }
+
+     // Get location name
+     const location = data.location.name;
+     document.getElementById("locationName").textContent = `Weather for ${location}`;
+
+     // Clear the forecast cards
+     const forecastCards = document.getElementById("forecastCards");
+     forecastCards.innerHTML = "";
+
+     // Loop through forecast data and display morning, afternoon, and evening forecasts for the next days
+     data.forecast.forecastday.forEach((day) => {
+         const morningForecast = day.hour[9]; // Morning forecast
+         createForecastCard(morningForecast, "Morning", forecastCards);
+         const afternoonForecast = day.hour[15]; // Afternoon forecast
+         createForecastCard(afternoonForecast, "Afternoon", forecastCards);
+         const eveningForecast = day.hour[18]; // Evening forecast
+         createForecastCard(eveningForecast, "Evening", forecastCards);
+     });
+
+     // Show the modal
+     $("#weatherModal").modal("show");
+ })
+ .catch((error) => console.error("Error fetching weather data:", error));
+}
+
+// Function to create a forecast card for each time of day
+function createForecastCard(forecast, timeOfDay, container) {
+const card = document.createElement("div");
+card.classList.add("card", "mb-3");
+
+card.innerHTML = `
+ <div class="card-body">
+     <h6 class="card-title">${timeOfDay}</h6>
+     <p class="card-text">
+         <strong>Temperature:</strong> ${forecast.temp_c}°C<br>
+         <strong>Condition:</strong> ${forecast.condition.text}<br>
+         <img src="https:${forecast.condition.icon}" alt="${forecast.condition.text}" /><br>
+         <strong>Humidity:</strong> ${forecast.humidity}%<br>
+         <strong>Wind Speed:</strong> ${forecast.wind_kph} kph
+     </p>
+ </div>
+`;
+container.appendChild(card);
+}
+
+
