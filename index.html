@@ -132,51 +132,15 @@
       </div>
     </div>
 
-
- <!-- Currency Exchange Modal -->
-<div id="currencyModal" class="modal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title">Currency Exchange Calculator</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="currencyForm">
-          <div class="mb-3">
-            <label for="baseCurrency" class="form-label">Base Currency</label>
-            <input type="text" id="baseCurrency" class="form-control" value="USD" required>
-          </div>
-          <div class="mb-3">
-            <label for="targetCurrency" class="form-label">Target Currency</label>
-            <input type="text" id="targetCurrency" class="form-control" value="EUR" required>
-          </div>
-          <div class="mb-3">
-            <label for="amount" class="form-label">Amount</label>
-            <input type="number" id="amount" class="form-control" value="1" min="1" required>
-          </div>
-          <div class="mb-3">
-            <label for="result" class="form-label">Converted Amount</label>
-            <input type="text" id="result" class="form-control" readonly>
-          </div>
-          <button type="submit" class="btn btn-outline-info">Convert</button>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-info btn-sm" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
+    
 <!-- Weather Modal -->
 <div class="modal fade" id="weatherModal" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
+      <div  class="modal-header bg-success bg-gradient text-white">
         <h5 class="modal-title" id="weatherModalLabel">Weather Forecast</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button
+         type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <div id="weatherContent">
@@ -191,9 +155,64 @@
   </div>
 </div>
 
+<!-- Exchange Rate Modal -->
+<div class="modal" id="currencyModal" tabindex="-1"  role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div  class="modal-header bg-success bg-gradient text-white">
+        <h5 class="modal-title">Currency Exchange Rate</h5>
+        <button type="button"
+        class="btn-close btn-close-white"
+        data-bs-dismiss="modal"
+        aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="exchangeRateForm">
+          <div class="form-group">
+            <label for="baseCurrency">Base Currency (e.g., USD)</label>
+            <input type="text" class="form-control" id="baseCurrency" placeholder="Enter base currency" required>
+          </div>
+          <div class="form-group">
+            <label for="targetCurrency">Target Currency (e.g., EUR)</label>
+            <input type="text" class="form-control" id="targetCurrency" placeholder="Enter target currency" required>
+          </div>
+        </form>
+        <div id="exchangeRateText"></div> <!-- Display exchange rate here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-success btn-sm" id="getExchangeRateBtn">Get Exchange Rate</button>
+        <button
+        type="button"
+        class="btn btn-outline-success btn-sm"
+        data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-
-
+<!-- News Modal -->
+<div class="modal fade" id="newsModal" tabindex="-1" role="dialog" aria-labelledby="newsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div  class="modal-header bg-success bg-gradient text-white">
+        <h5 class="modal-title" id="newsModalLabel">Local News</h5>
+        <button type="button"
+        class="btn-close btn-close-white"
+        data-bs-dismiss="modal"
+        aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="newsContent" class="container">
+          <!-- News content will be dynamically populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 

@@ -111,6 +111,31 @@ L.control.layers(basemaps, overlayMaps).addTo(map);
 
 weatherBtn.addTo(map);
 
+
+// Add a currency exchange button to the map
+const currencyBtn = L.easyButton("fa-coins", function (btn, map) {
+  $("#currencyModal").modal("show"); 
+});
+
+currencyBtn.addTo(map);
+
+ // Add a button to fetch and display local news
+ const newsBtn = L.easyButton("fa-newspaper", function (btn, map) {
+  // Get the selected country code from the dropdown
+  const selectedCountry = document.getElementById("countrySelect").value;
+
+  if (selectedCountry) {
+    // Fetch and display news based on the selected country
+    fetchNews(selectedCountry);
+  } else {
+    alert("Please select a country to fetch local news.");
+  }
+});
+
+// Add the news button to the map
+newsBtn.addTo(map);
+
+// Add a countries info button to the map
 const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
 });
@@ -294,29 +319,39 @@ function fetchCountryDetails(isoCode) {
 
       const countryData = data[0]; // Get the first result
 
-       // Country name, capital, population, languages
-       const countryName = countryData.name.common;
-       const capital = countryData.capital ? countryData.capital[0] : "No data";
-       const population = countryData.population.toLocaleString();
-       const language = Object.values(countryData.languages || {}).join(", ");
-         
-      // Handle the currency data
-      const currency = countryData.currencies
-      ? Object.values(countryData.currencies).map(curr => curr.name).join(", ")
-      : "No data available";
- 
-       // Populate modal fields
-       document.getElementById("countryName").textContent = countryName;
-       document.getElementById("capital").textContent = capital;
-       document.getElementById("population").textContent = population;
-       document.getElementById("language").textContent = language;
-       document.getElementById("currency").textContent = currency;
+      // Country name, capital, population, languages
+      const countryName = countryData.name.common;
+      const capital = countryData.capital ? countryData.capital[0] : "No data";
+      const population = countryData.population.toLocaleString();
+      const language = Object.values(countryData.languages || {}).join(", ");
+
+      // Handle the currency data and get currency code
+      const currencyInfo = countryData.currencies
+        ? Object.values(countryData.currencies)[0]
+        : null;
+      const currency = currencyInfo ? currencyInfo.name : "No data available";
+      const currencyCode = currencyInfo ? currencyInfo.code : null;
+
+      // Populate modal fields
+      document.getElementById("countryName").textContent = countryName;
+      document.getElementById("capital").textContent = capital;
+      document.getElementById("population").textContent = population;
+      document.getElementById("language").textContent = language;
+      document.getElementById("currency").textContent = currency;
+
+      // Fetch exchange rate if the country has a currency
+      if (currencyCode) {
+        fetchExchangeRateForCountry(currencyCode);
+      } else {
+        document.getElementById("exchangeRateText").textContent = "Currency data not available for this country.";
+      }
 
       // Open modal
       $("#exampleModal").modal("show");
     })
     .catch((error) => console.error("Error fetching country details:", error));
 }
+
  // Fetch country data and populate dropdown
  fetch("data/extract_iso_names.php")
  .then((response) => response.json())
@@ -392,4 +427,114 @@ card.innerHTML = `
 container.appendChild(card);
 }
 
+// Event listener for country selection from dropdown menu
+document.getElementById("countrySelect").addEventListener("change", function () {
+  const selectedCountryName = this.options[this.selectedIndex].text; // Get the selected country name
+  console.log(`Selected Country: ${selectedCountryName}`); // Debugging
 
+  // Call the PHP backend to fetch geocoding data based on the selected country name
+  fetch(`data/opencage.php?country_name=${encodeURIComponent(selectedCountryName)}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        console.error(data.error);
+        return;
+      }
+
+      const { lat, lng, countryISO, currencyCode } = data;
+      document.getElementById("countrySelect").value = countryISO;
+
+      // Fetch and load the country borders
+      loadCountryBorders(countryISO);
+
+      if (lat && lng) {
+        map.setView([lat, lng], 6);
+      }
+
+      // Fetch and display the exchange rate if currencyCode exists
+      if (currencyCode) {
+        fetchExchangeRateForCountry(currencyCode);
+      } else {
+        document.getElementById("exchangeRateText").textContent = "Currency data not available for this country.";
+      }
+    })
+    .catch((error) => console.error("Error during forward geocoding:", error));
+});
+
+document.getElementById("getExchangeRateBtn").addEventListener("click", function () {
+  const baseCurrency = document.getElementById("baseCurrency").value.toUpperCase();
+  const targetCurrency = document.getElementById("targetCurrency").value.toUpperCase();
+
+  if (!baseCurrency || !targetCurrency) {
+    alert("Please fill in both fields!");
+    return;
+  }
+
+  // Call the function to fetch exchange rate
+  fetchExchangeRate(baseCurrency, targetCurrency);
+});
+
+// Function to fetch and display exchange rate
+function fetchExchangeRate(baseCurrency, targetCurrency) {
+  fetch(`data/getExchangeRate.php?base=${baseCurrency}&target=${targetCurrency}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.error) {
+        document.getElementById("exchangeRateText").textContent = "Error fetching exchange rate.";
+        return;
+      }
+
+      // Display exchange rate
+      const exchangeRate = data.rate;
+      document.getElementById("exchangeRateText").innerHTML = `
+        <strong>1 ${baseCurrency}</strong> = <strong>${exchangeRate} ${targetCurrency}</strong>`;
+    })
+    .catch(error => {
+      console.error("Error fetching exchange rate:", error);
+      document.getElementById("exchangeRateText").textContent = "Failed to fetch exchange rate. Please try again.";
+    });
+}
+
+ // Function to fetch news from the backend and display it in the modal
+  function fetchNews(countryCode) {
+    fetch(`data/getNews.php?country=${countryCode}`)
+      .then((response) => response.json())
+      .then((data) => {
+        // Handle the response and populate the modal
+        if (data.error) {
+          console.error("Error fetching news:", data.error);
+          document.getElementById("newsContent").innerHTML =
+            "<p>Unable to fetch news at this time.</p>";
+          return;
+        }
+
+        // Clear the previous news content
+        const newsContent = document.getElementById("newsContent");
+        newsContent.innerHTML = "";
+
+        // Loop through each news article and create a card
+        data.results.forEach((article) => {
+          const newsCard = document.createElement("div");
+          newsCard.classList.add("card", "mb-3");
+
+          newsCard.innerHTML = `
+            <div class="card-body">
+              <h5 class="card-title">${article.title}</h5>
+              <p class="card-text">${article.description}</p>
+              <a href="${article.link}" target="_blank" class="btn btn-primary">Read more</a>
+            </div>
+          `;
+
+          newsContent.appendChild(newsCard);
+        });
+
+        // Show the news modal
+        $("#newsModal").modal("show");
+      })
+      .catch((error) => console.error("Error fetching news data:", error));
+  }
