@@ -1,20 +1,19 @@
 <?php
 header('Content-Type: application/json');
-$iso_a2 = $_GET['iso_a2'];
-$api_url = "http://api.geonames.org/earthquakesJSON?north=90&south=-90&east=180&west=-180&maxRows=10&username=smm488";
-$response = file_get_contents($api_url);
-$data = json_decode($response, true);
 
-// Extract relevant information
-$earthquakes = [];
-foreach ($data['earthquakes'] as $quake) {
-    $earthquakes[] = [
-        'lat' => $quake['lat'],
-        'lng' => $quake['lng'],
-        'magnitude' => $quake['magnitude'],
-        'depth' => $quake['depth'],
-    ];
-}
+// GeoNames API credentials
+$username = 'smm488';
 
-echo json_encode(['earthquakes' => $earthquakes]);
+// Get the bounding box coordinates (min_lat, max_lat, min_lon, max_lon) for the selected country from the URL parameters
+$north = $_GET['north'];
+$south = $_GET['south'];
+$east = $_GET['east'];
+$west = $_GET['west'];
+
+// GeoNames Earthquakes API URL (replace with actual parameters)
+$url = "http://api.geonames.org/earthquakesJSON?north=$north&south=$south&east=$east&west=$west&username=$username";
+
+// Fetch earthquake data from the GeoNames API
+$response = file_get_contents($url);
+echo $response;
 ?>

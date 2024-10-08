@@ -54,29 +54,93 @@ const earthquakeIcon = L.ExtraMarkers.icon({
 let citiesLayer = L.layerGroup();
 let earthquakesLayer = L.layerGroup();
 
+      // Load cities and earthquakes after loading country borders
+      //loadCities(iso_a2);
+      // Get country bounding box
+      // Fetch and display country borders and then load earthquakes
 function loadCountryBorders(iso_a2) {
   console.log(`Fetching borders for country code: ${iso_a2}`);
 
   fetch(`data/getCountryBorder.php?iso_a2=${iso_a2}`)
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       if (data.error) {
         console.error(data.error);
         return;
       }
 
+      // Remove the previous country layer if it exists
       if (countryLayer) {
         map.removeLayer(countryLayer);
       }
 
+      // Add new country border layer
       countryLayer = L.geoJSON(data.geometry).addTo(map);
+
+      // Fit map to the country boundaries
       map.fitBounds(countryLayer.getBounds());
 
-      // Load cities and earthquakes after loading country borders
-      loadCities(iso_a2);
-      loadEarthquakes(iso_a2);
+       loadCities(iso_a2);
+      // Get country bounding box from GeoJSON layer
+      let bounds = countryLayer.getBounds();
+      let north = bounds.getNorth(); // Northernmost latitude
+      let south = bounds.getSouth(); // Southernmost latitude
+      let east = bounds.getEast();   // Easternmost longitude
+      let west = bounds.getWest();   // Westernmost longitude
+
+      // Debugging output to ensure bounding box is correct
+      console.log(`Bounding Box - North: ${north}, South: ${south}, East: ${east}, West: ${west}`);
+
+      // Now that we have the bounding box, load earthquakes for this country
+      loadEarthquakes(north, south, east, west);  // Pass the bounding box to loadEarthquakes function
     })
-    .catch(error => console.error('Error retrieving country border:', error));
+    .catch((error) => console.error("Error retrieving country border:", error));
+}
+
+// Function to load earthquake data based on bounding box
+function loadEarthquakes(north, south, east, west) {
+  console.log("Fetching earthquake data...");
+
+  // Fetch earthquake data based on the country's bounding box
+  fetch(`data/getEarthquakes.php?north=${north}&south=${south}&east=${east}&west=${west}`)
+    .then((response) => response.json())
+    .then((data) => {
+      // Remove any previous earthquake markers
+      if (earthquakesLayer) {
+        map.removeLayer(earthquakesLayer);
+      }
+
+      // Create earthquake markers from the fetched data
+      let earthquakeMarkers = data.earthquakes.map((quake) => {
+        let magnitude = quake.magnitude;
+        let lat = quake.lat;
+        let lng = quake.lng;
+
+        // Customize the marker (use Leaflet Extra Markers or custom icons here)
+        let marker = L.marker([lat, lng], {
+          icon: L.ExtraMarkers.icon({
+            icon: 'fa-solid fa-house-crack',
+            markerColor: magnitude > 5 ? 'red' : 'blue', // Red for higher magnitude quakes
+            shape: 'circle',
+            prefix: 'fa'
+          })
+        });
+
+        // Bind popup with earthquake details
+        marker.bindPopup(`
+          <strong>Location:</strong> ${quake.src}<br>
+          <strong>Magnitude:</strong> ${magnitude}<br>
+          <strong>Depth:</strong> ${quake.depth} km<br>
+          <strong>Date:</strong> ${new Date(quake.datetime).toLocaleString()}
+        `);
+
+        return marker;
+      });
+
+      // Add earthquake markers to a layer group and then to the map
+      earthquakesLayer = L.layerGroup(earthquakeMarkers).addTo(map);
+    })
+    .catch((error) => console.error("Error fetching earthquake data:", error));
 }
 
 function loadCities(iso_a2) {
@@ -99,25 +163,7 @@ function loadCities(iso_a2) {
     .catch(error => console.error('Error loading cities:', error));
 }
 
-function loadEarthquakes(iso_a2) {
-  fetch(`data/getEarthquakes.php?iso_a2=${iso_a2}`)
-    .then(response => response.json())
-    .then(data => {
-      // Clear previous markers
-      earthquakesLayer.clearLayers();
 
-      // Loop through earthquake data and create markers
-      data.earthquakes.forEach(earthquake => {
-        const marker = L.marker([earthquake.lat, earthquake.lng], { icon: earthquakeIcon })
-          .bindPopup(`<b>Magnitude: ${earthquake.magnitude}</b><br>Depth: ${earthquake.depth} km`);
-        earthquakesLayer.addLayer(marker);
-      });
-
-      // Add the earthquakes layer to the map
-      map.addLayer(earthquakesLayer);
-    })
-    .catch(error => console.error('Error loading earthquakes:', error));
-}
 
 // Update the dropdown listener
 document.getElementById("countrySelect").addEventListener("change", function () {
