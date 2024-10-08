@@ -34,82 +34,101 @@ $(document).ready(function () {
     layers: [streets],
   }).setView([54.5, -4], 6); // Initial view
 
-// Define custom marker icons (city and earthquake)
+// Custom icons
 const cityIcon = L.ExtraMarkers.icon({
-  icon: "fa-city",
-  markerColor: "blue",
-  shape: "square",
-  prefix: "fa",
+  icon: 'fa-city',
+  markerColor: 'blue',
+  shape: 'circle',
+  prefix: 'fa',
 });
 
 const earthquakeIcon = L.ExtraMarkers.icon({
-  icon: "fa-house-crack",
-  markerColor: "red",
-  shape: "circle",
-  prefix: "fa",
+  icon: 'fa-house-crack',
+  markerColor: 'red',
+  shape: 'square',
+  prefix: 'fa',
 });
 
+
 // Overlay layer groups
-let cityLayer = L.layerGroup();
-let earthquakeLayer = L.layerGroup();
-let overlayMaps = {
-  "City": cityLayer,
-  "Earthquakes": earthquakeLayer,
-};
+let citiesLayer = L.layerGroup();
+let earthquakesLayer = L.layerGroup();
 
-// Function to add the city marker
-function addCityMarker(lat, lng, cityName) {
-  L.marker([lat, lng], { icon: cityIcon })
-    .bindPopup(`<b>City:</b> ${cityName}`)
-    .addTo(cityLayer);
+function loadCountryBorders(iso_a2) {
+  console.log(`Fetching borders for country code: ${iso_a2}`);
+
+  fetch(`data/getCountryBorder.php?iso_a2=${iso_a2}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        console.error(data.error);
+        return;
+      }
+
+      if (countryLayer) {
+        map.removeLayer(countryLayer);
+      }
+
+      countryLayer = L.geoJSON(data.geometry).addTo(map);
+      map.fitBounds(countryLayer.getBounds());
+
+      // Load cities and earthquakes after loading country borders
+      loadCities(iso_a2);
+      loadEarthquakes(iso_a2);
+    })
+    .catch(error => console.error('Error retrieving country border:', error));
 }
 
-// Function to add the earthquake marker
-function addEarthquakeMarker(lat, lng, magnitude) {
-  L.marker([lat, lng], { icon: earthquakeIcon })
-    .bindPopup(`<b>Earthquake:</b> Magnitude ${magnitude}`)
-    .addTo(earthquakeLayer);
-}
-
-// Fetch city and earthquake data when a country is selected
-function loadCountryData(iso_a2) {
-  // Fetch city data
+function loadCities(iso_a2) {
   fetch(`data/getCity.php?iso_a2=${iso_a2}`)
     .then(response => response.json())
     .then(data => {
-      if (data.geonames.length > 0) {
-        let city = data.geonames[0];
-        addCityMarker(city.lat, city.lng, city.name);
-      }
-    })
-    .catch(error => console.error("Error fetching city data:", error));
+      // Clear previous markers
+      citiesLayer.clearLayers();
 
-  // Fetch earthquake data
+      // Loop through city data and create markers
+      data.cities.forEach(city => {
+        const marker = L.marker([city.lat, city.lng], { icon: cityIcon })
+          .bindPopup(`<b>${city.name}</b><br>Population: ${city.population}`);
+        citiesLayer.addLayer(marker);
+      });
+
+      // Add the cities layer to the map
+      map.addLayer(citiesLayer);
+    })
+    .catch(error => console.error('Error loading cities:', error));
+}
+
+function loadEarthquakes(iso_a2) {
   fetch(`data/getEarthquakes.php?iso_a2=${iso_a2}`)
     .then(response => response.json())
     .then(data => {
-      if (data.earthquakes.length > 0) {
-        data.earthquakes.forEach(earthquake => {
-          addEarthquakeMarker(earthquake.lat, earthquake.lng, earthquake.magnitude);
-        });
-      }
+      // Clear previous markers
+      earthquakesLayer.clearLayers();
+
+      // Loop through earthquake data and create markers
+      data.earthquakes.forEach(earthquake => {
+        const marker = L.marker([earthquake.lat, earthquake.lng], { icon: earthquakeIcon })
+          .bindPopup(`<b>Magnitude: ${earthquake.magnitude}</b><br>Depth: ${earthquake.depth} km`);
+        earthquakesLayer.addLayer(marker);
+      });
+
+      // Add the earthquakes layer to the map
+      map.addLayer(earthquakesLayer);
     })
-    .catch(error => console.error("Error fetching earthquake data:", error));
+    .catch(error => console.error('Error loading earthquakes:', error));
 }
 
 // Update the dropdown listener
 document.getElementById("countrySelect").addEventListener("change", function () {
   const iso_a2 = this.value.toUpperCase();
   loadCountryBorders(iso_a2);
-
-  // Clear existing markers
-  cityLayer.clearLayers();
-  earthquakeLayer.clearLayers();
-
-  // Load city and earthquake data
-  loadCountryData(iso_a2);
 });
 
+const overlayMaps = {
+  "Cities": citiesLayer,
+  "Earthquakes": earthquakesLayer,
+};
 // Add layer control
 L.control.layers(basemaps,overlayMaps).addTo(map);
 
