@@ -5,8 +5,6 @@
 let map;
 let countryLayer; // Holds country borders layer
 
-
-
 // tile layers
 
 const streets = L.tileLayer(
@@ -36,52 +34,86 @@ $(document).ready(function () {
     layers: [streets],
   }).setView([54.5, -4], 6); // Initial view
 
-  // Create marker groups for different categories
-  const airportMarkers = L.layerGroup().addTo(map);
-  const universityMarkers = L.layerGroup().addTo(map);
-  const cityMarkers = L.layerGroup().addTo(map);
-  const stadiumMarkers = L.layerGroup().addTo(map);
+// Define custom marker icons (city and earthquake)
+const cityIcon = L.ExtraMarkers.icon({
+  icon: "fa-city",
+  markerColor: "blue",
+  shape: "square",
+  prefix: "fa",
+});
 
-  // Sample data for each category (replace with real data)
-  const airports = [
-    { lat: 40.7128, lng: -74.0060, name: "John F. Kennedy International Airport" },
-    { lat: 51.4700, lng: -0.4543, name: "London Heathrow Airport" }
-  ];
+const earthquakeIcon = L.ExtraMarkers.icon({
+  icon: "fa-house-crack",
+  markerColor: "red",
+  shape: "circle",
+  prefix: "fa",
+});
 
-  const universities = [
-    { lat: 42.3601, lng: -71.0942, name: "Harvard University" },
-    { lat: 51.7548, lng: -1.2544, name: "University of Oxford" }
-  ];
+// Overlay layer groups
+let cityLayer = L.layerGroup();
+let earthquakeLayer = L.layerGroup();
+let overlayMaps = {
+  "City": cityLayer,
+  "Earthquakes": earthquakeLayer,
+};
 
-  const cities = [
-    { lat: 48.8566, lng: 2.3522, name: "Paris" },
-    { lat: 34.0522, lng: -118.2437, name: "Los Angeles" }
-  ];
+// Function to add the city marker
+function addCityMarker(lat, lng, cityName) {
+  L.marker([lat, lng], { icon: cityIcon })
+    .bindPopup(`<b>City:</b> ${cityName}`)
+    .addTo(cityLayer);
+}
 
-  const stadiums = [
-    { lat: 40.8296, lng: -73.9262, name: "Yankee Stadium" },
-    { lat: 51.5550, lng: -0.1086, name: "Emirates Stadium" }
-  ];
+// Function to add the earthquake marker
+function addEarthquakeMarker(lat, lng, magnitude) {
+  L.marker([lat, lng], { icon: earthquakeIcon })
+    .bindPopup(`<b>Earthquake:</b> Magnitude ${magnitude}`)
+    .addTo(earthquakeLayer);
+}
 
+// Fetch city and earthquake data when a country is selected
+function loadCountryData(iso_a2) {
+  // Fetch city data
+  fetch(`data/getCity.php?iso_a2=${iso_a2}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.geonames.length > 0) {
+        let city = data.geonames[0];
+        addCityMarker(city.lat, city.lng, city.name);
+      }
+    })
+    .catch(error => console.error("Error fetching city data:", error));
 
+  // Fetch earthquake data
+  fetch(`data/getEarthquakes.php?iso_a2=${iso_a2}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.earthquakes.length > 0) {
+        data.earthquakes.forEach(earthquake => {
+          addEarthquakeMarker(earthquake.lat, earthquake.lng, earthquake.magnitude);
+        });
+      }
+    })
+    .catch(error => console.error("Error fetching earthquake data:", error));
+}
 
- // Add markers for each category
- addMarkers(airportMarkers, airports, 'plane', 'blue');
- addMarkers(universityMarkers, universities, 'university', 'green');
- addMarkers(cityMarkers, cities, 'city', 'orange');
- addMarkers(stadiumMarkers, stadiums, 'soccer-ball-o', 'red');
+// Update the dropdown listener
+document.getElementById("countrySelect").addEventListener("change", function () {
+  const iso_a2 = this.value.toUpperCase();
+  loadCountryBorders(iso_a2);
 
-  // Overlay maps for layer control
-  const overlayMaps = {
-    "Airports": airportMarkers,
-    "Universities": universityMarkers,
-    "Cities": cityMarkers,
-    "Stadiums": stadiumMarkers,
-  };
+  // Clear existing markers
+  cityLayer.clearLayers();
+  earthquakeLayer.clearLayers();
 
+  // Load city and earthquake data
+  loadCountryData(iso_a2);
+});
 
 // Add layer control
-L.control.layers(basemaps, overlayMaps).addTo(map);
+L.control.layers(basemaps,overlayMaps).addTo(map);
+
+
 
 // buttons
  // Create a button for fetching weather
@@ -203,7 +235,7 @@ if (navigator.geolocation) {
 
       // Fetch and display country details in modal using PHP
       fetchCountryDetails(iso_a2);
-
+      
 });
  
 
@@ -212,19 +244,7 @@ if (navigator.geolocation) {
 // End of (document).ready block -------
 
 
-// Function to add markers to respective layers
-function addMarkers(layerGroup, data, iconName, color) {
-  data.forEach(item => {
-    L.marker([item.lat, item.lng], {
-      icon: L.ExtraMarkers.icon({
-        icon: iconName,
-        markerColor: color,
-        shape: 'circle',
-        prefix: 'fa'
-      })
-    }).addTo(layerGroup).bindPopup(item.name);
-  });
-}
+
 
 
 // Fetch and display country borders
@@ -253,7 +273,10 @@ function loadCountryBorders(iso_a2) {
       map.fitBounds(countryLayer.getBounds());
     })
     .catch((error) => console.error("Error retrieving country border:", error));
+    
 }
+
+
  // Event listener for country selection from dropdown menu
  document
  .getElementById("countrySelect")
@@ -538,3 +561,5 @@ function fetchExchangeRate(baseCurrency, targetCurrency) {
       })
       .catch((error) => console.error("Error fetching news data:", error));
   }
+
+  
