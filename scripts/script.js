@@ -50,7 +50,7 @@ let citiesLayer = L.layerGroup();
 let earthquakesLayer = L.layerGroup();
 
       // Load cities and earthquakes after loading country borders
-      //loadCities(iso_a2);
+    
       // Get country bounding box
       // Fetch and display country borders and then load earthquakes
 function loadCountryBorders(iso_a2) {
@@ -74,6 +74,8 @@ function loadCountryBorders(iso_a2) {
 
       // Fit map to the country boundaries
       map.fitBounds(countryLayer.getBounds());
+      
+ 
 
        loadCities(iso_a2);
       // Get country bounding box from GeoJSON layer
@@ -103,6 +105,10 @@ function loadEarthquakes(north, south, east, west) {
       console.log("Earthquake Data Received:", data); // Debugging
       // Clear any previous earthquake markers
       earthquakesLayer.clearLayers();
+    
+       // Create a marker cluster group
+       let markersCluster = L.markerClusterGroup();
+
       // Create earthquake markers from the fetched data
       let earthquakeMarkers = data.earthquakes.map((quake) => {
         let magnitude = quake.magnitude;
@@ -127,6 +133,13 @@ function loadEarthquakes(north, south, east, west) {
 
         return marker;
       });
+
+       // Add all earthquake markers to the marker cluster group
+       earthquakeMarkers.forEach(marker => markersCluster.addLayer(marker));
+
+       // Add the marker cluster group to the earthquakesLayer (which is a layer group)
+       earthquakesLayer.clearLayers();
+       earthquakesLayer.addLayer(markersCluster);
 
       // Add earthquake markers to a layer group and then to the map
       earthquakesLayer = L.layerGroup(earthquakeMarkers).addTo(map);
@@ -199,7 +212,6 @@ L.control.layers(basemaps,overlayMaps).addTo(map);
 
 weatherBtn.addTo(map);
 
-
 // Add a currency exchange button to the map
 const currencyBtn = L.easyButton("fa-coins", function (btn, map) {
   $("#currencyModal").modal("show"); 
@@ -223,6 +235,20 @@ currencyBtn.addTo(map);
 // Add the news button to the map
 newsBtn.addTo(map);
 
+// Wikipedia button
+const wikiBtn = L.easyButton("fa-brands fa-wikipedia-w", function (btn, map) {
+  const iso_a2 = document.getElementById("countrySelect").value;
+  if (iso_a2) {
+    loadWikipediaArticle(iso_a2);
+  } else {
+    // If no country is selected, show an alert instead
+    alert("Please select a country first!");
+  }
+});
+wikiBtn.addTo(map);
+
+
+  
 // Add a countries info button to the map
 const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
   $("#exampleModal").modal("show");
@@ -291,7 +317,9 @@ if (navigator.geolocation) {
 
       // Fetch and display country details in modal using PHP
       fetchCountryDetails(iso_a2);
-      
+     
+      loadWikipediaArticle(iso_a2);
+     
 });
  
 
@@ -618,4 +646,30 @@ function fetchExchangeRate(baseCurrency, targetCurrency) {
       .catch((error) => console.error("Error fetching news data:", error));
   }
 
-  
+// Load Wikipedia article for the selected country
+function loadWikipediaArticle(iso_a2) {
+  console.log(`Fetching Wikipedia article for country code: ${iso_a2}`); // Debugging
+
+  fetch(`data/getWikipediaArticle.php?iso_a2=${iso_a2}`)
+    .then((response) => {
+      console.log("Response received"); // Debugging
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Data received:", data); // Debugging
+
+      if (data.error) {
+        console.error(data.error);
+        document.getElementById("wikiArticleTitle").innerText = "Error fetching article.";
+        document.getElementById("wikiArticleContent").innerText = data.error;
+        return;
+      }
+
+      // Update modal with article content
+      document.getElementById("wikiArticleTitle").innerText = data.title;
+      document.getElementById("wikiArticleContent").innerHTML = data.content; // Ensure content is safe for innerHTML use
+      $("#wikipediaModal").modal("show"); // Show the modal
+    })
+    .catch((error) => console.error("Error retrieving Wikipedia article:", error));
+}
+
