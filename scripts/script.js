@@ -42,12 +42,7 @@ const cityIcon = L.ExtraMarkers.icon({
   prefix: 'fa',
 });
 
-const earthquakeIcon = L.ExtraMarkers.icon({
-  icon: 'fa-house-crack',
-  markerColor: 'red',
-  shape: 'square',
-  prefix: 'fa',
-});
+
 
 
 // Overlay layer groups
@@ -105,29 +100,24 @@ function loadEarthquakes(north, south, east, west) {
   fetch(`data/getEarthquakes.php?north=${north}&south=${south}&east=${east}&west=${west}`)
     .then((response) => response.json())
     .then((data) => {
-      // Remove any previous earthquake markers
-      if (earthquakesLayer) {
-        map.removeLayer(earthquakesLayer);
-      }
-
+      // Clear any previous earthquake markers
+      earthquakesLayer.clearLayers();
       // Create earthquake markers from the fetched data
       let earthquakeMarkers = data.earthquakes.map((quake) => {
         let magnitude = quake.magnitude;
         let lat = quake.lat;
         let lng = quake.lng;
 
-        // Customize the marker (use Leaflet Extra Markers or custom icons here)
-        let marker = L.marker([lat, lng], {
-          icon: L.ExtraMarkers.icon({
-            icon: 'fa-solid fa-house-crack',
+        const earthquakeIcon = L.ExtraMarkers.icon({
+         icon: 'fa-solid fa-house-crack',
             markerColor: magnitude > 5 ? 'red' : 'blue', // Red for higher magnitude quakes
             shape: 'circle',
             prefix: 'fa'
-          })
-        });
-
+           });
+        // Customize the marker (use Leaflet Extra Markers or custom icons here)
+        const marker = L.marker([lat,lng],{icon:earthquakeIcon})
         // Bind popup with earthquake details
-        marker.bindPopup(`
+         .bindPopup(`
           <strong>Location:</strong> ${quake.src}<br>
           <strong>Magnitude:</strong> ${magnitude}<br>
           <strong>Depth:</strong> ${quake.depth} km<br>
