@@ -100,6 +100,7 @@ function loadEarthquakes(north, south, east, west) {
   fetch(`data/getEarthquakes.php?north=${north}&south=${south}&east=${east}&west=${west}`)
     .then((response) => response.json())
     .then((data) => {
+      console.log("Earthquake Data Received:", data); // Debugging
       // Clear any previous earthquake markers
       earthquakesLayer.clearLayers();
       // Create earthquake markers from the fetched data
