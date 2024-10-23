@@ -268,6 +268,11 @@ const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
     })
     .then((data) => {
       console.log("Country data received:", data);
+
+    // Sort the country data alphabetically by the country name
+    data.sort((a, b) => a.name.localeCompare(b.name));
+
+
       // Populate the dropdown menu
       const selectElement = document.getElementById("countrySelect");
       data.forEach((country) => {
@@ -276,8 +281,15 @@ const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
         option.textContent = country.name;
         selectElement.appendChild(option);
       });
-      // Log to confirm dropdown is populated
-      console.log("Dropdown populated with country data");
+    
+       // Log to confirm dropdown is populated
+    console.log("Dropdown populated with sorted country data");
+
+      // Remove the preloader once the dropdown is populated
+      const preloader = document.querySelector('#preloader');
+      if (preloader) {
+        preloader.remove(); // Preloader removed after data load
+      }
     })
     .catch((error) => console.error("Error fetching the country data:", error));
 
@@ -306,11 +318,13 @@ if (navigator.geolocation) {
  } else {
   console.error("Geolocation is not supported by this browser.");
  }
+
+
   // Event listener for country selection from menu
   document
-    .getElementById("countrySelect")
-    .addEventListener("change", function () {
+    .getElementById("countrySelect").addEventListener("change", function () {
       const iso_a2 = this.value.toUpperCase(); // Ensure uppercase
+      document.getElementById('preloader');
       console.log(`Country selected: ${iso_a2}`); // Debugging
 
       loadCountryBorders(iso_a2);
@@ -326,8 +340,6 @@ if (navigator.geolocation) {
 
 
 // End of (document).ready block -------
-
-
 
 
 
@@ -459,21 +471,7 @@ function fetchCountryDetails(isoCode) {
     .catch((error) => console.error("Error fetching country details:", error));
 }
 
- // Fetch country data and populate dropdown
- fetch("data/extract_iso_names.php")
- .then((response) => response.json())
- .then((data) => {
-     const selectElement = document.getElementById("countrySelect");
-     data.forEach((country) => {
-         const option = document.createElement("option");
-         option.value = country.iso_code.toUpperCase(); // Ensure uppercase
-         option.textContent = country.name;
-         selectElement.appendChild(option);
-     });
- })
- .catch((error) => console.error("Error fetching the country data:", error));
-
-
+ 
 // Function to fetch and display weather
 function fetchWeather(lat, lon) {
 // Call the PHP backend to fetch weather data
@@ -488,51 +486,45 @@ fetch(`data/getWeather.php?lat=${lat}&lon=${lon}`)
      if (data.error) {
          console.error(data.error);
          return;
+     }else{
+
+      //current weather
+      document.getElementById('weatherModalLabel').textContent= `Weather in ${data.location.name}, ${data.location.country}`;
+      document.getElementById('todayConditions').textContent= data.current.condition.text;
+      document.getElementById('todayMaxTemp').textContent= Math.round(data.forecast.forecastday[0].day.maxtemp_c);
+      document.getElementById('todayMinTemp').textContent=Math.round(data.forecast.forecastday[0].day.mintemp_c);
+     
+      //current weather icon
+      const iconUrl = `https:${data.current.condition.icon}`;
+      document.getElementById('todayIcon').src = iconUrl;
+      document.getElementById('todayIcon').alt = data.current.condition.text;
+      document.getElementById('todayIcon').title = data.current.condition.text;
+      //day1 weather
+      document.getElementById('day1Date').textContent= data.forecast.forecastday[1].date;
+      document.getElementById('day1MaxTemp').textContent= Math.round(data.forecast.forecastday[1].day.maxtemp_c);
+      document.getElementById('day1MinTemp').textContent=Math.round(data.forecast.forecastday[1].day.mintemp_c);
+      //day1 weather icon
+      const day1IconUrl = `https:${data.forecast.forecastday[1].day.condition.icon}`;
+      document.getElementById('day1Icon').src = day1IconUrl;
+      document.getElementById('day1Icon').alt = data.forecast.forecastday[1].day.condition.text;
+      document.getElementById('day1Icon').title = data.forecast.forecastday[1].day.condition.text;
+       //day2 weather
+       document.getElementById('day2Date').textContent= data.forecast.forecastday[2].date;
+       document.getElementById('day2MaxTemp').textContent= Math.round(data.forecast.forecastday[2].day.maxtemp_c);
+       document.getElementById('day2MinTemp').textContent=Math.round(data.forecast.forecastday[2].day.mintemp_c);
+       //day1 weather icon
+       const day2IconUrl = `https:${data.forecast.forecastday[2].day.condition.icon}`;
+       document.getElementById('day2Icon').src = day2IconUrl;
+       document.getElementById('day2Icon').alt = data.forecast.forecastday[2].day.condition.text;
+       document.getElementById('day2Icon').title = data.forecast.forecastday[2].day.condition.text;
      }
-
-     // Get location name
-     const location = data.location.name;
-     document.getElementById("locationName").textContent = `Weather for ${location}`;
-
-     // Clear the forecast cards
-     const forecastCards = document.getElementById("forecastCards");
-     forecastCards.innerHTML = "";
-
-     // Loop through forecast data and display morning, afternoon, and evening forecasts for the next days
-     data.forecast.forecastday.forEach((day) => {
-         const morningForecast = day.hour[9]; // Morning forecast
-         createForecastCard(morningForecast, "Morning", forecastCards);
-         const afternoonForecast = day.hour[15]; // Afternoon forecast
-         createForecastCard(afternoonForecast, "Afternoon", forecastCards);
-         const eveningForecast = day.hour[18]; // Evening forecast
-         createForecastCard(eveningForecast, "Evening", forecastCards);
-     });
-
      // Show the modal
      $("#weatherModal").modal("show");
  })
  .catch((error) => console.error("Error fetching weather data:", error));
 }
 
-// Function to create a forecast card for each time of day
-function createForecastCard(forecast, timeOfDay, container) {
-const card = document.createElement("div");
-card.classList.add("card", "mb-3");
 
-card.innerHTML = `
- <div class="card-body">
-     <h6 class="card-title">${timeOfDay}</h6>
-     <p class="card-text">
-         <strong>Temperature:</strong> ${forecast.temp_c}°C<br>
-         <strong>Condition:</strong> ${forecast.condition.text}<br>
-         <img src="https:${forecast.condition.icon}" alt="${forecast.condition.text}" /><br>
-         <strong>Humidity:</strong> ${forecast.humidity}%<br>
-         <strong>Wind Speed:</strong> ${forecast.wind_kph} kph
-     </p>
- </div>
-`;
-container.appendChild(card);
-}
 
 // Event listener for country selection from dropdown menu
 document.getElementById("countrySelect").addEventListener("change", function () {
@@ -615,30 +607,23 @@ function fetchExchangeRate(baseCurrency, targetCurrency) {
         // Handle the response and populate the modal
         if (data.error) {
           console.error("Error fetching news:", data.error);
-          document.getElementById("newsContent").innerHTML =
+          document.getElementById("article1").innerHTML =
             "<p>Unable to fetch news at this time.</p>";
           return;
+        }else{
+        const articles = data.articles; 
+
+        // Check if there are articles available
+        for (let i = 0; i<articles.length; i++) {
+          const article = articles[i];
+          // Populate each item based on its index
+          document.getElementById(`img${i + 1}`).innerHTML = `<img class="img-fluid rounded" src="${article.image_url}" alt="${article.title}">`;
+          document.getElementById(`article${i + 1}`).textContent = article.title;
+          document.getElementById(`link${i + 1}`).innerHTML = `<a href="${article.link}" target="_blank">Read more</a>`;
         }
-
-        // Clear the previous news content
-        const newsContent = document.getElementById("newsContent");
-        newsContent.innerHTML = "";
-
-        // Loop through each news article and create a card
-        data.results.forEach((article) => {
-          const newsCard = document.createElement("div");
-          newsCard.classList.add("card", "mb-3");
-
-          newsCard.innerHTML = `
-            <div class="card-body">
-              <h5 class="card-title">${article.title}</h5>
-              <p class="card-text">${article.description}</p>
-              <a href="${article.link}" target="_blank" class="btn btn-primary">Read more</a>
-            </div>
-          `;
-
-          newsContent.appendChild(newsCard);
-        });
+      }
+       
+       
 
         // Show the news modal
         $("#newsModal").modal("show");
@@ -672,4 +657,3 @@ function loadWikipediaArticle(iso_a2) {
     })
     .catch((error) => console.error("Error retrieving Wikipedia article:", error));
 }
-

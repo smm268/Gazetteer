@@ -41,7 +41,11 @@
     
     <!--Local Stylesheet-->
     <link rel="stylesheet" href="styles\style.css" />
-  
+  <!--favicon-->
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+<link rel="manifest" href="webmanifest/site.webmanifest">
     
   </head>
   <body>
@@ -133,26 +137,133 @@
     </div>
 
     
-<!-- Weather Modal -->
-<div class="modal fade" id="weatherModal" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div  class="modal-header bg-success bg-gradient text-white">
-        <h5 class="modal-title" id="weatherModalLabel">Weather Forecast</h5>
-        <button
-         type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Weather Modal-->
+<div id="weatherModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="weatherModalLabel" aria-hidden="true">
+    
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    
+    <div class="modal-content shadow">      
+        
+      <div class="modal-header bg-success bg-gradient text-white">
+
+        <h5 class="modal-title" id="weatherModalLabel"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+
       </div>
+
       <div class="modal-body">
-        <div id="weatherContent">
-          <!-- Weather forecast details will be populated here -->
-          <h6 id="locationName"></h6>
-          <div id="forecastCards" class="d-flex flex-column">
-            <!-- Weather cards go here -->
-          </div>
+        
+        <div id="pre-load"></div>
+
+        <div class="row">
+
+          <div class="col border mt-1 ms-2 me-2 mb-2">
+
+            <p class="fw-bold fs-5 mt-1">TODAY</p>
+            
+            <div class="row">
+              
+              <div class="col text-center m-3">
+                
+                <p id="todayConditions" class="fw-bold fs-6"></p>
+                  
+              </div>
+              
+              <div class="col text-center">
+                
+                <img id="todayIcon" class="img-fluid mt-0" src="" alt="" title="">
+                  
+              </div>              
+
+              <div class="col text-center">
+                
+                <p class="fw-bold fs-4 mb-0"><span id="todayMaxTemp"></span><sup>o</sup><span class="tempMetric">c</span></p>
+                <p class="fs-5 mt-0 text-secondary"><span id="todayMinTemp"></span><sup>o</sup><span class="tempMetric">c</span></p>
+                  
+              </div>              
+              
+            </div>
+
+          </div>   
+
         </div>
+
+        <div class="row">
+
+          <div class="col border mt-1 ms-2 me-2 mb-0">
+            
+            <div class="row">
+              
+              <div class="col text-center">
+
+                <p id="day1Date" class="fw-bold fs-6 mt-3"></p>
+                
+              </div>
+              
+            </div>
+            
+            <div class="row">
+              
+              <div class="col text-center">
+                
+                <p class="fw-bold fs-4 mb-0"><span id="day1MaxTemp"></span><sup>o</sup>c</p>
+                <p class="fs-5 mt-0 text-secondary"><span id="day1MinTemp"></span><sup>o</sup>c</p>
+                
+              </div>
+              
+              <div class="col text-center">
+                
+                <img id="day1Icon" src="" alt="" title="">
+                
+              </div>    
+              
+            </div>
+            
+          </div>   
+
+          <div class="col border mt-1 ms-2 me-2 mb-0">
+
+            <div class="row">
+              
+              <div class="col text-center">
+
+                <p id="day2Date" class="fw-bold fs-6 mt-3"></p>
+                
+              </div>
+              
+            </div>
+            
+            <div class="row">
+              
+              <div class="col text-center">
+                
+                <p class="fw-bold fs-4 mb-0"><span id="day2MaxTemp"></span><sup>o</sup>c</p>
+                <p class="fs-5 mt-0 text-secondary"><span id="day2MinTemp"></span><sup>o</sup>c</p>
+                
+              </div>
+              
+              <div class="col text-center">
+                
+                <img id="day2Icon" src="" alt="" title="">
+                
+              </div>    
+              
+            </div>
+            
+          </div>         
+
+       </div>   
+    
       </div>
+      
+      <div class="modal-footer">
+        
+      </div>
+
     </div>
+      
   </div>
+  
 </div>
 
 <!-- Exchange Rate Modal -->
@@ -191,7 +302,7 @@
   </div>
 </div>
 
-<!-- News Modal -->
+<!-- News Modal
 <div class="modal fade" id="newsModal" tabindex="-1" role="dialog" aria-labelledby="newsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -205,11 +316,122 @@
       </div>
       <div class="modal-body">
         <div id="newsContent" class="container">
-          <!-- News content will be dynamically populated here -->
+         
         </div>
       </div>
     </div>
   </div>
+</div>-->
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" id="newsModal">
+       
+  <div class="modal-content shadow"> 
+    
+    <div class="modal-header bg-success bg-gradient text-white">
+      <h5 class="modal-title">BREAKING NEWS</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+
+    <div class="modal-body" id="newsContent">
+      
+        <!-- first item -->          
+      
+      <table class="table table-borderless" id="item1">
+             
+        <tr>
+
+          <td rowspan="2" width="50%" id="img1"></td>
+          <td id="article1"></td>
+          <td id="link1"></td>
+          
+        </tr>
+        
+        <tr>
+                     
+          <td class="align-bottom pb-0" id="sourceicon"> 
+          </td>            
+        </tr>
+        
+      </table>
+      
+      <hr>
+      
+      <!-- second item -->
+      
+      <table class="table table-borderless mb-0" id="item2">       
+        
+        <tr>
+
+          <td rowspan="2" width="50%" id="img2">
+           
+          </td>
+          <td id="article2">
+            
+          </td>
+          
+          <td id="link2">
+            
+          </td>
+          
+        </tr>
+        
+        <tr>
+                     
+          <td class="align-bottom pb-0">
+            
+            <p class="fw-light fs-6 mb-1"></p>
+            
+          </td>            
+          
+        </tr>
+
+        
+        
+      </table> 
+      
+      <hr>
+      
+      <!-- third item -->
+      
+      <table class="table table-borderless mb-0" id="item3">       
+        
+        <tr>
+
+          <td rowspan="2" width="50%" id="img3">
+            
+          </td>
+          
+          <td id="article3">
+            
+          </td>
+          <td id="link3">
+            
+          </td>
+          
+        </tr>
+        
+        <tr>
+                     
+          <td class="align-bottom pb-0">
+            
+            <p class="fw-light fs-6 mb-1">BBC News</p>
+            
+          </td>            
+          
+        </tr>
+
+        
+        
+      </table>         
+
+      
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+    </div>
+
+  </div>
+  
 </div>
 
 
@@ -243,7 +465,10 @@
 </div>
 
 
-
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="spinner"></div>
+  </div>
 
     
 
