@@ -300,11 +300,6 @@ if (navigator.geolocation) {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
  
-      // Add a popup for the current location
-      L.marker([lat, lng])
-        .addTo(map)
-        .bindPopup("You are here!")
-        .openPopup();
  
       // Reverse geocode to get the country ISO code
       reverseGeocode(lat, lng);
