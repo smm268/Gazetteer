@@ -5,7 +5,6 @@ $api_url = "http://api.geonames.org/searchJSON?country={$iso_a2}&featureCode=PPL
 $response = file_get_contents($api_url);
 $data = json_decode($response, true);
 
-// Extract relevant information
 $cities = [];
 foreach ($data['geonames'] as $city) {
     $cities[] = [

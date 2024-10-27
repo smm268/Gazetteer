@@ -1,5 +1,5 @@
 <?php
-// Example PHP script to get a Wikipedia article for a country
+
 header('Content-Type: application/json');
 
 $iso_a2 = isset($_GET['iso_a2']) ? $_GET['iso_a2'] : '';
@@ -9,7 +9,7 @@ if (!$iso_a2) {
     exit;
 }
 
-// Function to fetch country name by ISO code
+
 function getCountryName($iso_a2) {
     $url = "https://restcountries.com/v3.1/alpha/" . strtolower($iso_a2);
     $response = file_get_contents($url);
@@ -22,7 +22,7 @@ function getCountryName($iso_a2) {
     }
 }
 
-// Fetch country name using ISO code
+
 $title = getCountryName($iso_a2);
 
 if (!$title) {
@@ -40,7 +40,6 @@ if (isset($data['error'])) {
     exit;
 }
 
-// Return the title and content
 $article_title = $data['parse']['title'];
 $article_content = $data['parse']['text']['*'];
 

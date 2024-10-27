@@ -3,7 +3,7 @@
 // ---------------------------------------------------------
 
 let map;
-let countryLayer; // Holds country borders layer
+let selectedCountryLayer; // Holds country borders layer
 
 // tile layers
 
@@ -34,8 +34,9 @@ $(document).ready(function () {
     layers: [streets],
   }).setView([54.5, -4], 6); // Initial view
 
+  
 //overlays
-var earthquakes = L.markerClusterGroup({
+const earthquakes = L.markerClusterGroup({
   polygonOptions: {
     fillColor: "#fff",
     color: "#000",
@@ -44,7 +45,7 @@ var earthquakes = L.markerClusterGroup({
     fillOpacity: 0.5
   }
 });
-var cities = L.markerClusterGroup({
+const cities = L.markerClusterGroup({
   polygonOptions: {
     fillColor: "#fff",
     color: "#000",
@@ -60,18 +61,6 @@ var cityIcon = L.ExtraMarkers.icon({
       markerColor: "green",
       shape: "square"
     });
-const overlayMaps = {
-  "Cities": cities,
-  "Earthquakes": earthquakes,
-};
-// Add layer control
-L.control.layers(basemaps,overlayMaps).addTo(map);
-earthquakes.addTo(map);
-cities.addTo(map);
-
-getEarthquakes();
-getCities();
-
 // Fetch and display country borders
 function loadCountryBorders(iso_a2) {
   console.log(`Fetching borders for country code: ${iso_a2}`); // Debugging
@@ -89,70 +78,82 @@ function loadCountryBorders(iso_a2) {
         return;
       }
       // Remove previous layer if needed
-      if (countryLayer) {
-        map.removeLayer(countryLayer);
+      if (selectedCountryLayer) {
+        map.removeLayer(selectedCountryLayer);
       }
+
+      var myStyle = {
+        "color": "#ff7800",
+        "weight": 5,
+        "opacity": 0.65
+    };
       // Add new layer border
-      countryLayer = L.geoJSON(data.geometry).addTo(map);
-      // Adjust map view with borders
-      map.fitBounds(countryLayer.getBounds());
+      selectedCountryLayer = L.geoJSON(data.geometry,{
+        style: myStyle
+      }).addTo(map);
+     
+      map.fitBounds(selectedCountryLayer.getBounds());
+      
 
-      getCities(iso_a2);
+    
       // Get country bounding box from GeoJSON layer
-      let bounds = countryLayer.getBounds();
-      let north = bounds.getNorth(); // Northernmost latitude
-      let south = bounds.getSouth(); // Southernmost latitude
-      let east = bounds.getEast();   // Easternmost longitude
-      let west = bounds.getWest();   // Westernmost longitude
+      let bounds = selectedCountryLayer.getBounds();
+      let north = bounds.getNorth(); 
+      let south = bounds.getSouth(); 
+      let east = bounds.getEast();  
+      let west = bounds.getWest();  
 
-      // Debugging output to ensure bounding box is correct
       console.log(`Bounding Box - North: ${north}, South: ${south}, East: ${east}, West: ${west}`);
 
-      // Now that we have the bounding box, load earthquakes for this country
-      getEarthquakes(north, south, east, west);  // Pass the bounding box to loadEarthquakes function
+      getEarthquakes(north, south, east, west);  
+      getCities(iso_a2);
     })
     .catch((error) => console.error("Error retrieving country border:", error));
 }
 
-// Function to load earthquake data based on bounding box
+//fetch earthquake
 function getEarthquakes(north, south, east, west) {
   console.log("Fetching earthquake data...");
 
-  // Fetch earthquake data based on the country's bounding box
   fetch(`data/getEarthquakes.php?north=${north}&south=${south}&east=${east}&west=${west}`)
     .then((response) => response.json())
     .then((data) => {
       console.log("Earthquake Data Received:", data); // Debugging
-      // Clear the previous earthquake markers
+      
+      // Clear previous earthquake markers
       earthquakes.clearLayers();
-    
-       // Create earthquake markers
-       data.earthquakes.forEach((quake) => {
-        const magnitude = quake.magnitude;
-        const lat = quake.lat;
-        const lng = quake.lng;
 
-        // Create earthquake icon based on magnitude
-        const earthquakeIcon = L.ExtraMarkers.icon({
-          icon: 'fa-solid fa-house-crack',
-          markerColor:  'red' ,  // Red for magnitude > 5
-          shape: "square",
-          prefix: 'fa',
+      // Check if the earthquakes array exists and is an array
+      if (Array.isArray(data.earthquakes)) {
+        data.earthquakes.forEach((quake) => {
+          const magnitude = quake.magnitude;
+          const lat = quake.lat;
+          const lng = quake.lng;
+
+          // Create earthquake icon based on magnitude
+          const earthquakeIcon = L.ExtraMarkers.icon({
+            icon: 'fa-solid fa-house-crack',
+            markerColor: 'red', // Red for magnitude > 5
+            shape: "square",
+            prefix: 'fa',
+          });
+
+          // Create a marker for the earthquake and bind popup details
+          const marker = L.marker([lat, lng], { icon: earthquakeIcon })
+            .bindPopup(`
+              <strong>Location:</strong> ${quake.src}<br>
+              <strong>Magnitude:</strong> ${magnitude}<br>
+              <strong>Depth:</strong> ${quake.depth} km<br>
+              <strong>Date:</strong> ${new Date(quake.datetime).toLocaleString()}
+            `);
+
+          // Add the marker to the earthquakes layer
+          earthquakes.addLayer(marker);
         });
-     
-     // Create a marker for the earthquake and bind popup details
-     const marker = L.marker([lat, lng], { icon: earthquakeIcon })
-     .bindPopup(`
-       <strong>Location:</strong> ${quake.src}<br>
-       <strong>Magnitude:</strong> ${magnitude}<br>
-       <strong>Depth:</strong> ${quake.depth} km<br>
-       <strong>Date:</strong> ${new Date(quake.datetime).toLocaleString()}
-     `);
-
-   // Add the marker to the earthquakes layer
-   earthquakes.addLayer(marker);
- });
-})
+      } else {
+        console.log("No earthquake data available for the selected area.");
+      }
+    })
     .catch((error) => console.error("Error fetching earthquake data:", error));
 }
 
@@ -174,12 +175,24 @@ function getCities(iso_a2) {
     })
     .catch(error => console.error('Error loading cities:', error));
 }
-
 // Update the dropdown listener
 document.getElementById("countrySelect").addEventListener("change", function () {
   const iso_a2 = this.value.toUpperCase();
   loadCountryBorders(iso_a2);
+
 });
+
+const overlayMaps = {
+  "Cities": cities,
+  "Earthquakes": earthquakes,
+};
+
+// Add layer control
+L.control.layers(basemaps,overlayMaps).addTo(map);
+
+
+
+
 // buttons
  // Create a button for fetching weather
  const weatherBtn = L.easyButton("fa-cloud fa-lg", function (btn, map) {
@@ -210,7 +223,7 @@ weatherBtn.addTo(map);
 
 // Add a currency exchange button to the map
 const currencyBtn = L.easyButton("fa-coins", function (btn, map) {
-  $("#currencyModal").modal("show"); 
+  $("#exchangeRateModal").modal("show"); 
 });
 
 currencyBtn.addTo(map);
@@ -255,7 +268,10 @@ const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
 });
 
 
-  
+// Clear all logs and errors
+console.log = function () {};
+
+
   // Fetch country data and populate dropdown
   fetch("data/extract_iso_names.php")
     .then((response) => {
@@ -295,43 +311,53 @@ if (navigator.geolocation) {
     function (position) {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
- 
- 
-      // Reverse geocode to get the country ISO code
-      reverseGeocode(lat, lng);
 
-      
+     fetch('data/getCountryCode.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lat, lng }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          const countryCode = data.countryCode;
+          if (countryCode) {
+            // Set the country select dropdown and trigger change event
+            const countrySelect = document.getElementById("countrySelect");
+            countrySelect.value = countryCode.toUpperCase();
+            countrySelect.dispatchEvent(new Event('change'));
+
+            
+          } else {
+            console.error('Country code not found');
+          }
+        })
+        .catch(error => console.error('Error fetching country code:', error));
+       
     },
-    function (error) {
-      console.error("Error getting geolocation: ", error);
-    }
-  );
- } else {
-  console.error("Geolocation is not supported by this browser.");
- }
-
+      function (error) {
+        console.error("Error getting geolocation: ", error);
+      }
+    );
+   } else {
+    console.error("Geolocation is not supported by this browser.");
+   }
 
   // Event listener for country selection from menu
-  document
-    .getElementById("countrySelect").addEventListener("change", function () {
-      const iso_a2 = this.value.toUpperCase(); // Ensure uppercase
+  document.getElementById("countrySelect").addEventListener("change", function () {
+      const iso_a2 = this.value.toUpperCase(); 
       document.getElementById('preloader');
-      console.log(`Country selected: ${iso_a2}`); // Debugging
+      console.log(`Country selected: ${iso_a2}`); 
 
       loadCountryBorders(iso_a2);
 
-      // Fetch and display country details in modal using PHP
       fetchCountryDetails(iso_a2);
      
       loadWikipediaArticle(iso_a2);
      
 });
- 
-
-
-
 // End of (document).ready block -------
-
 
 
 // Fetch and display country borders
@@ -351,16 +377,26 @@ function loadCountryBorders(iso_a2) {
         return;
       }
       // Remove previous layer if needed
-      if (countryLayer) {
-        map.removeLayer(countryLayer);
+      if (selectedCountryLayer) {
+        map.removeLayer(selectedCountryLayer);
       }
+
+      var myStyle = {
+        "color": "#ff7800",
+        "weight": 5,
+        "opacity": 0.65
+    };
       // Add new layer border
-      countryLayer = L.geoJSON(data.geometry).addTo(map);
+      selectedCountryLayer = L.geoJSON(data.geometry,{
+        style: myStyle
+      }).addTo(map);
       // Adjust map view with borders
-      map.fitBounds(countryLayer.getBounds());
+      map.fitBounds(selectedCountryLayer.getBounds());
+      
     })
     .catch((error) => console.error("Error retrieving country border:", error));
 }
+
  // Event listener for country selection from dropdown menu
  document
  .getElementById("countrySelect")
@@ -389,29 +425,8 @@ function loadCountryBorders(iso_a2) {
      .catch((error) => console.error("Error during forward geocoding:", error));
  });
 
-// Reverse geocode using OpenCage API to get country based on lat/lng
-function reverseGeocode(lat, lng) {
-fetch(`data/opencage.php?lat=${lat}&lng=${lng}`)
- .then((response) => response.json())
- .then((data) => {
-   if (data.error) {
-     console.error(data.error);
-     return;
-   }
 
-   const { countryISO, countryName } = data;
-   console.log(`Reverse geocoded country: ${countryName} (${countryISO})`);
 
-   // Set the dropdown to the correct country ISO code
-   document.getElementById("countrySelect").value = countryISO;
-
-   // Load borders and center map on the country
-   loadCountryBorders(countryISO);
-
- })
- .catch((error) => console.error("Error during reverse geocoding:", error));
- 
-}
 // Fetch country details and populate modal using the PHP proxy
 function fetchCountryDetails(isoCode) {
   const url = `data/getCountryDetails.php?iso_a2=${isoCode}`;
@@ -429,7 +444,7 @@ function fetchCountryDetails(isoCode) {
       // Country name, capital, population, languages
       const countryName = countryData.name.common;
       const capital = countryData.capital ? countryData.capital[0] : "No data";
-      const population = countryData.population.toLocaleString();
+      const population = numeral(countryData.population).format('0,0');
       const language = Object.values(countryData.languages || {}).join(", ");
 
       // Handle the currency data and get currency code
@@ -437,21 +452,13 @@ function fetchCountryDetails(isoCode) {
         ? Object.values(countryData.currencies)[0]
         : null;
       const currency = currencyInfo ? currencyInfo.name : "No data available";
-      const currencyCode = currencyInfo ? currencyInfo.code : null;
-
+   
       // Populate modal fields
       document.getElementById("countryName").textContent = countryName;
       document.getElementById("capital").textContent = capital;
       document.getElementById("population").textContent = population;
       document.getElementById("language").textContent = language;
       document.getElementById("currency").textContent = currency;
-
-      // Fetch exchange rate if the country has a currency
-      if (currencyCode) {
-        fetchExchangeRateForCountry(currencyCode);
-      } else {
-        document.getElementById("exchangeRateText").textContent = "Currency data not available for this country.";
-      }
 
       // Open modal
       $("#exampleModal").modal("show");
@@ -479,27 +486,27 @@ fetch(`data/getWeather.php?lat=${lat}&lon=${lon}`)
       //current weather
       document.getElementById('weatherModalLabel').textContent= `Weather in ${data.location.name}, ${data.location.country}`;
       document.getElementById('todayConditions').textContent= data.current.condition.text;
-      document.getElementById('todayMaxTemp').textContent= Math.round(data.forecast.forecastday[0].day.maxtemp_c);
-      document.getElementById('todayMinTemp').textContent=Math.round(data.forecast.forecastday[0].day.mintemp_c);
-     
+      document.getElementById('todayMaxTemp').textContent = numeral(Math.round(data.forecast.forecastday[0].day.maxtemp_c)).format('0,0');
+      document.getElementById('todayMinTemp').textContent = numeral(Math.round(data.forecast.forecastday[0].day.mintemp_c)).format('0,0') ;
       //current weather icon
       const iconUrl = `https:${data.current.condition.icon}`;
       document.getElementById('todayIcon').src = iconUrl;
       document.getElementById('todayIcon').alt = data.current.condition.text;
       document.getElementById('todayIcon').title = data.current.condition.text;
       //day1 weather
-      document.getElementById('day1Date').textContent= data.forecast.forecastday[1].date;
-      document.getElementById('day1MaxTemp').textContent= Math.round(data.forecast.forecastday[1].day.maxtemp_c);
-      document.getElementById('day1MinTemp').textContent=Math.round(data.forecast.forecastday[1].day.mintemp_c);
+      document.getElementById('day1Date').textContent = formatDate(data.forecast.forecastday[1].date);
+      document.getElementById('day1MaxTemp').textContent = numeral(Math.round(data.forecast.forecastday[1].day.maxtemp_c)).format('0,0');
+      document.getElementById('day1MinTemp').textContent = numeral(Math.round(data.forecast.forecastday[1].day.mintemp_c)).format('0,0');
+
       //day1 weather icon
       const day1IconUrl = `https:${data.forecast.forecastday[1].day.condition.icon}`;
       document.getElementById('day1Icon').src = day1IconUrl;
       document.getElementById('day1Icon').alt = data.forecast.forecastday[1].day.condition.text;
       document.getElementById('day1Icon').title = data.forecast.forecastday[1].day.condition.text;
        //day2 weather
-       document.getElementById('day2Date').textContent= data.forecast.forecastday[2].date;
-       document.getElementById('day2MaxTemp').textContent= Math.round(data.forecast.forecastday[2].day.maxtemp_c);
-       document.getElementById('day2MinTemp').textContent=Math.round(data.forecast.forecastday[2].day.mintemp_c);
+       document.getElementById('day2Date').textContent = formatDate(data.forecast.forecastday[2].date);
+       document.getElementById('day2MaxTemp').textContent = numeral(Math.round(data.forecast.forecastday[2].day.maxtemp_c)).format('0,0');
+       document.getElementById('day2MinTemp').textContent = numeral(Math.round(data.forecast.forecastday[2].day.mintemp_c)).format('0,0');
        //day1 weather icon
        const day2IconUrl = `https:${data.forecast.forecastday[2].day.condition.icon}`;
        document.getElementById('day2Icon').src = day2IconUrl;
@@ -512,112 +519,111 @@ fetch(`data/getWeather.php?lat=${lat}&lon=${lon}`)
  .catch((error) => console.error("Error fetching weather data:", error));
 }
 
-
-
-// Event listener for country selection from dropdown menu
-document.getElementById("countrySelect").addEventListener("change", function () {
-  const selectedCountryName = this.options[this.selectedIndex].text; // Get the selected country name
-  console.log(`Selected Country: ${selectedCountryName}`); // Debugging
-
-  // Call the PHP backend to fetch geocoding data based on the selected country name
-  fetch(`data/opencage.php?country_name=${encodeURIComponent(selectedCountryName)}`)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.error) {
-        console.error(data.error);
-        return;
-      }
-
-      const { lat, lng, countryISO, currencyCode } = data;
-      document.getElementById("countrySelect").value = countryISO;
-
-      // Fetch and load the country borders
-      loadCountryBorders(countryISO);
-
-      if (lat && lng) {
-        map.setView([lat, lng], 6);
-      }
-
-      // Fetch and display the exchange rate if currencyCode exists
-      if (currencyCode) {
-        fetchExchangeRateForCountry(currencyCode);
-      } else {
-        document.getElementById("exchangeRateText").textContent = "Currency data not available for this country.";
-      }
-    })
-    .catch((error) => console.error("Error during forward geocoding:", error));
-});
-
-document.getElementById("getExchangeRateBtn").addEventListener("click", function () {
-  const baseCurrency = document.getElementById("baseCurrency").value.toUpperCase();
-  const targetCurrency = document.getElementById("targetCurrency").value.toUpperCase();
-
-  if (!baseCurrency || !targetCurrency) {
-    alert("Please fill in both fields!");
-    return;
-  }
-
-  // Call the function to fetch exchange rate
-  fetchExchangeRate(baseCurrency, targetCurrency);
-});
-
-// Function to fetch and display exchange rate
-function fetchExchangeRate(baseCurrency, targetCurrency) {
-  fetch(`data/getExchangeRate.php?base=${baseCurrency}&target=${targetCurrency}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.error) {
-        document.getElementById("exchangeRateText").textContent = "Error fetching exchange rate.";
-        return;
-      }
-
-      // Display exchange rate
-      const exchangeRate = data.rate;
-      document.getElementById("exchangeRateText").innerHTML = `
-        <strong>1 ${baseCurrency}</strong> = <strong>${exchangeRate} ${targetCurrency}</strong>`;
-    })
-    .catch(error => {
-      console.error("Error fetching exchange rate:", error);
-      document.getElementById("exchangeRateText").textContent = "Failed to fetch exchange rate. Please try again.";
-    });
+// Function to format dates using date-fns
+function formatDate(dateString) {
+  const date = new Date(dateString); 
+  return dateFns.format(date, 'eeee, MMMM d'); 
 }
 
- // Function to fetch news from the backend and display it in the modal
-  function fetchNews(countryCode) {
-    fetch(`data/getNews.php?country=${countryCode}`)
+
+// Fetch currency rates 
+document.addEventListener("DOMContentLoaded", function () {
+  const fromAmount = document.getElementById("fromAmount");
+  const toAmount = document.getElementById("toAmount");
+  const exchangeRateSelect = document.getElementById("exchangeRate");
+
+  function fetchRates() {
+      fetch("data/getExchangeRate.php")
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error("Network response was not ok " + response.statusText);
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (data && data.rates) {
+                  populateCurrencyOptions(data.rates);
+              } else {
+                  alert("Failed to load exchange rates.");
+              }
+          })
+          .catch(error => console.error("Error fetching rates:", error));
+  }
+
+  // Populate the dropdown with currency options
+  function populateCurrencyOptions(rates) {
+      exchangeRateSelect.innerHTML = "";
+      for (const currencyCode in rates) {
+          const option = document.createElement("option");
+          option.value = rates[currencyCode];
+          option.textContent = currencyCode;
+          exchangeRateSelect.appendChild(option);
+      }
+  }
+
+  // Update converted amount
+  function updateConversion() {
+      const rate = parseFloat(exchangeRateSelect.value);
+      const amount = parseFloat(fromAmount.value);
+      if (!isNaN(rate) && !isNaN(amount)) {
+        const convertedAmount = amount * rate;
+        toAmount.value = numeral(convertedAmount).format('0,0.00');
+      }
+  }
+
+  // Event Listeners
+  fromAmount.addEventListener("input", updateConversion);
+  exchangeRateSelect.addEventListener("change", updateConversion);
+
+  // Fetch initial exchange rates on load
+  fetchRates();
+});
+
+
+//function to fetch news
+function fetchNews() {
+  fetch('data/getNews.php')
       .then((response) => response.json())
       .then((data) => {
-        // Handle the response and populate the modal
-        if (data.error) {
-          console.error("Error fetching news:", data.error);
-          document.getElementById("article1").innerHTML =
-            "<p>Unable to fetch news at this time.</p>";
-          return;
-        }else{
-        const articles = data.articles; 
+          if (data.error) {
+              console.error("Error fetching news:", data.error);
+              return;
+          }
 
-        // Check if there are articles available
-        for (let i = 0; i<articles.length; i++) {
-          const article = articles[i];
-          // Populate each item based on its index
-          document.getElementById(`img${i + 1}`).innerHTML = `<img class="img-fluid rounded" src="${article.image_url}" alt="${article.title}">`;
-          document.getElementById(`article${i + 1}`).textContent = article.title;
-          document.getElementById(`link${i + 1}`).innerHTML = `<a href="${article.link}" target="_blank">Read more</a>`;
-        }
-      }
-       
-       
+          if (data.articles && data.articles.length > 0) {
+              const newsContent = document.getElementById('newsContent');
+              newsContent.innerHTML = ''; // Clear existing content
 
-        // Show the news modal
-        $("#newsModal").modal("show");
+              data.articles.forEach((article) => {
+                  const articleHTML = `
+                  <table class="table table-borderless mb-0">
+                          <tr>
+                              <td rowspan="2" width="50%">
+                                  <img class="img-fluid rounded" src="${article.imageUrl}" alt="news image" title="${article.title}">
+                              </td>
+                              <td>
+                                  <a href="${article.url}" class="fw-bold fs-6 text-black" target="_blank">${article.title}</a>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td class="align-bottom pb-0">
+                                  <p class="fw-light fs-6 mb-1">${article.source}</p>
+                              </td>            
+                          </tr>
+                      </table>
+                      <hr>
+                  `;
+                  newsContent.insertAdjacentHTML('beforeend', articleHTML);
+              });
+
+              // Show the news modal
+              $("#newsModal").modal("show");
+          } else {
+              console.error("No articles found in the response.");
+          }
       })
       .catch((error) => console.error("Error fetching news data:", error));
-  }
+}
 
 // Load Wikipedia article for the selected country
 function loadWikipediaArticle(iso_a2) {

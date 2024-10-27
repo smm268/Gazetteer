@@ -266,178 +266,74 @@
   
 </div>
 
-<!-- Exchange Rate Modal -->
-<div class="modal" id="currencyModal" tabindex="-1"  role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div  class="modal-header bg-success bg-gradient text-white">
-        <h5 class="modal-title">Currency Exchange Rate</h5>
-        <button type="button"
-        class="btn-close btn-close-white"
-        data-bs-dismiss="modal"
-        aria-label="Close">
-        </button>
+
+
+<!-- Currency Exchange Rate Modal -->
+<div class="modal fade" id="exchangeRateModal" tabindex="-1" aria-labelledby="exchangeRateLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-success bg-gradient text-white">
+        <h5 class="modal-title" id="exchangeRateLabel">Currency Calculator</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="exchangeRateForm">
-          <div class="form-group">
-            <label for="baseCurrency">Base Currency (e.g., USD)</label>
-            <input type="text" class="form-control" id="baseCurrency" placeholder="Enter base currency" required>
+        <form>
+          <div class="form-floating mb-3">
+            <input id="fromAmount" type="number" class="form-control" value="1" min="1" step="1">
+            <label for="fromAmount">From USD</label>
           </div>
-          <div class="form-group">
-            <label for="targetCurrency">Target Currency (e.g., EUR)</label>
-            <input type="text" class="form-control" id="targetCurrency" placeholder="Enter target currency" required>
+          <div class="form-floating mb-3">
+            <select id="exchangeRate" class="form-select"></select>
+            <label for="exchangeRate">Convert to</label>
+          </div>
+          <div class="form-floating">
+            <input id="toAmount" type="text" class="form-control" disabled>
+            <label for="toAmount">Result</label>
           </div>
         </form>
-        <div id="exchangeRateText"></div> <!-- Display exchange rate here -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-success btn-sm" id="getExchangeRateBtn">Get Exchange Rate</button>
         <button
-        type="button"
-        class="btn btn-outline-success btn-sm"
-        data-bs-dismiss="modal">Close</button>
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- News Modal
-<div class="modal fade" id="newsModal" tabindex="-1" role="dialog" aria-labelledby="newsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div  class="modal-header bg-success bg-gradient text-white">
-        <h5 class="modal-title" id="newsModalLabel">Local News</h5>
-        <button type="button"
-        class="btn-close btn-close-white"
-        data-bs-dismiss="modal"
-        aria-label="Close">
-        </button>
+
+<!--News Model-->
+<div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow"> 
+      <div class="modal-header bg-success bg-gradient text-white">
+        <h5 class="modal-title">BREAKING NEWS</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div id="newsContent" class="container">
-         
-        </div>
+      <div class="modal-body" id="newsContent">
+        <!-- News articles will be injected here -->
+      </div>
+      <div class="modal-footer">
+        <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
       </div>
     </div>
   </div>
-</div>-->
-<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" id="newsModal">
-       
-  <div class="modal-content shadow"> 
-    
-    <div class="modal-header bg-success bg-gradient text-white">
-      <h5 class="modal-title">BREAKING NEWS</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-    </div>
-
-    <div class="modal-body" id="newsContent">
-      
-        <!-- first item -->          
-      
-      <table class="table table-borderless" id="item1">
-             
-        <tr>
-
-          <td rowspan="2" width="50%" id="img1"></td>
-          <td id="article1"></td>
-          <td id="link1"></td>
-          
-        </tr>
-        
-        <tr>
-                     
-          <td class="align-bottom pb-0" id="sourceicon"> 
-          </td>            
-        </tr>
-        
-      </table>
-      
-      <hr>
-      
-      <!-- second item -->
-      
-      <table class="table table-borderless mb-0" id="item2">       
-        
-        <tr>
-
-          <td rowspan="2" width="50%" id="img2">
-           
-          </td>
-          <td id="article2">
-            
-          </td>
-          
-          <td id="link2">
-            
-          </td>
-          
-        </tr>
-        
-        <tr>
-                     
-          <td class="align-bottom pb-0">
-            
-            <p class="fw-light fs-6 mb-1"></p>
-            
-          </td>            
-          
-        </tr>
-
-        
-        
-      </table> 
-      
-      <hr>
-      
-      <!-- third item -->
-      
-      <table class="table table-borderless mb-0" id="item3">       
-        
-        <tr>
-
-          <td rowspan="2" width="50%" id="img3">
-            
-          </td>
-          
-          <td id="article3">
-            
-          </td>
-          <td id="link3">
-            
-          </td>
-          
-        </tr>
-        
-        <tr>
-                     
-          <td class="align-bottom pb-0">
-            
-            <p class="fw-light fs-6 mb-1">BBC News</p>
-            
-          </td>            
-          
-        </tr>
-
-        
-        
-      </table>         
-
-      
-    </div>
-
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-    </div>
-
-  </div>
-  
 </div>
 
 
 <!-- Wikipedia Article Modal -->
 <div id="wikipediaModal" class="modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-dialog-centered" role="document">
+  <div class="modal-dialog modal-dialog-centered  modal-dialog-scrollable" role="document">
     <div class="modal-content">
       <div class="modal-header bg-success bg-gradient text-white">
         <h5 class="modal-title" id="wikiArticleTitle">Article Title</h5>
@@ -473,7 +369,9 @@
     
 
     <!--External Scripts-->
-    
+    <script src="libs/numeral.min.js"></script>
+    <script src="libs/date_fns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@4.1.0/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js"></script>
