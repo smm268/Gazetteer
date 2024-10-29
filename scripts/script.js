@@ -246,13 +246,16 @@ newsBtn.addTo(map);
 
 // Wikipedia button
 const wikiBtn = L.easyButton("fa-brands fa-wikipedia-w", function (btn, map) {
-  const iso_a2 = document.getElementById("countrySelect").value;
-  if (iso_a2) {
-    loadWikipediaArticle(iso_a2);
-  } else {
-    // If no country is selected, show an alert instead
-    alert("Please select a country first!");
-  }
+  
+    const selectedCountry = document.getElementById("countrySelect").value;
+  
+    if (selectedCountry) {
+  
+      loadWikipediaArticle(selectedCountry);
+  
+    } else {
+      console.warn("No country selected");
+    }
 });
 wikiBtn.addTo(map);
 
@@ -260,9 +263,15 @@ wikiBtn.addTo(map);
   
 // Add a countries info button to the map
 const infoBtn = L.easyButton("fa-info fa-xl", function (btn, map) {
-  $("#exampleModal").modal("show");
-});
+   // Get the selected country code from the dropdown
+   const isoCode = document.getElementById("countrySelect").value;
 
+   if (isoCode) {
+    fetchCountryDetails(isoCode)
+   } else {
+     alert("Please select a country to fetch local news.");
+   }
+});
   // Info button
   infoBtn.addTo(map);
 });
@@ -351,10 +360,6 @@ if (navigator.geolocation) {
       console.log(`Country selected: ${iso_a2}`); 
 
       loadCountryBorders(iso_a2);
-
-      fetchCountryDetails(iso_a2);
-     
-      loadWikipediaArticle(iso_a2);
      
 });
 // End of (document).ready block -------
@@ -459,9 +464,7 @@ function fetchCountryDetails(isoCode) {
       document.getElementById("population").textContent = population;
       document.getElementById("language").textContent = language;
       document.getElementById("currency").textContent = currency;
-
-      // Open modal
-      $("#exampleModal").modal("show");
+        $("#exampleModal").modal("show");
     })
     .catch((error) => console.error("Error fetching country details:", error));
 }
@@ -531,6 +534,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const fromAmount = document.getElementById("fromAmount");
   const toAmount = document.getElementById("toAmount");
   const exchangeRateSelect = document.getElementById("exchangeRate");
+  const exchangeRateModal = document.getElementById("exchangeRateModal");
 
   function fetchRates() {
       fetch("data/getExchangeRate.php")
@@ -575,8 +579,10 @@ document.addEventListener("DOMContentLoaded", function () {
   fromAmount.addEventListener("input", updateConversion);
   exchangeRateSelect.addEventListener("change", updateConversion);
 
-  // Fetch initial exchange rates on load
-  fetchRates();
+ 
+  exchangeRateModal.addEventListener("show.bs.modal", function () {
+      fetchRates();
+  });
 });
 
 

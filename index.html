@@ -9,10 +9,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css"
-    />
+    <link rel="stylesheet" href="libs/src/toastify.css"/>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"
@@ -26,14 +23,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/css/leaflet.extra-markers.min.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css"
-    />
+    <link rel="stylesheet" href="libs/css/all.min.css"/>
+    <link rel="stylesheet" href="libs/dist/css/bootstrap.min.css"/>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css"
@@ -43,9 +34,9 @@
     <link rel="stylesheet" href="styles\style.css" />
   <!--favicon-->
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-<link rel="manifest" href="webmanifest/site.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+  <link rel="manifest" href="webmanifest/site.webmanifest">
     
   </head>
   <body>
@@ -60,7 +51,7 @@
 
     <!-- example modal layout -->
 
-    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div id="exampleModal" class="modal fade" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
           <div class="modal-header bg-success bg-gradient text-white">
@@ -269,7 +260,7 @@
 
 
 <!-- Currency Exchange Rate Modal -->
-<div class="modal fade" id="exchangeRateModal" tabindex="-1" aria-labelledby="exchangeRateLabel" aria-hidden="true">
+<div class="modal fade" id="exchangeRateModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="exchangeRateLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content shadow">
       <div class="modal-header bg-success bg-gradient text-white">
@@ -307,7 +298,7 @@
 
 
 <!--News Model-->
-<div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+<div class="modal fade" id="newsModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content shadow"> 
       <div class="modal-header bg-success bg-gradient text-white">
@@ -332,7 +323,7 @@
 
 
 <!-- Wikipedia Article Modal -->
-<div id="wikipediaModal" class="modal" tabindex="-1" role="dialog">
+<div id="wikipediaModal" class="modal fade" data-bs-backdrop="false" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered  modal-dialog-scrollable" role="document">
     <div class="modal-content">
       <div class="modal-header bg-success bg-gradient text-white">
@@ -369,15 +360,15 @@
     
 
     <!--External Scripts-->
+    <script src="libs/dist/js/bootstrap.min.js"></script>
+    <script src="libs/src/toastify.js"></script>
     <script src="libs/numeral.min.js"></script>
     <script src="libs/date_fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@4.1.0/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/js/leaflet.extra-markers.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
  
     <!--Local Script-->    
