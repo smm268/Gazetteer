@@ -150,6 +150,9 @@ function getEarthquakes(north, south, east, west) {
           // Add the marker to the earthquakes layer
           earthquakes.addLayer(marker);
         });
+        if (earthquakes.getLayers().length > 0) {
+          map.addLayer(earthquakes);
+        }
       } else {
         console.log("No earthquake data available for the selected area.");
       }
@@ -172,6 +175,10 @@ function getCities(iso_a2) {
           // Add the marker to the cities layer
           cities.addLayer(marker);
         })
+        
+      if (cities.getLayers().length > 0) {
+        map.addLayer(cities);
+      }
     })
     .catch(error => console.error('Error loading cities:', error));
 }
@@ -580,8 +587,11 @@ document.addEventListener("DOMContentLoaded", function () {
   exchangeRateSelect.addEventListener("change", updateConversion);
 
  
-  exchangeRateModal.addEventListener("show.bs.modal", function () {
-      fetchRates();
+  exchangeRateModal.addEventListener("show.bs.modal", fetchRates);
+   
+    exchangeRateModal.addEventListener("hidden.bs.modal", function () {
+      fromAmount.value = 1;
+      toAmount.value = "";
   });
 });
 
