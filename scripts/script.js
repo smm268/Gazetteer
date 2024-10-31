@@ -232,7 +232,6 @@ weatherBtn.addTo(map);
 const currencyBtn = L.easyButton("fa-coins", function (btn, map) {
   $("#exchangeRateModal").modal("show"); 
 });
-
 currencyBtn.addTo(map);
 
  // Add a button to fetch and display local news
