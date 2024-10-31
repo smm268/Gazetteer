@@ -553,6 +553,7 @@ document.addEventListener("DOMContentLoaded", function () {
           .then(data => {
               if (data && data.rates) {
                   populateCurrencyOptions(data.rates);
+                   updateConversion();
               } else {
                   alert("Failed to load exchange rates.");
               }
