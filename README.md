@@ -11,3 +11,19 @@ Gazetter is a lightweight application for managing, searching, and organizing ge
 -  Simple and efficient API
 - Easy configuration and deployment
 
+## Tech Stack
+
+### Frontend
+- React / Next.js 
+- HTML5
+- CSS3 / Tailwind / Bootstrap
+- PHP
+- Axios / Fetch API
+
+### Backend
+- Node.js 
+- REST API
+
+### Tools
+- Git & GitHub
+- VS Code
